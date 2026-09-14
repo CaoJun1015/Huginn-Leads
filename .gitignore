@@ -1,0 +1,11 @@
+.env
+.venv/
+data/
+backups/
+frontend/node_modules/
+frontend/dist/
+src/huginn_leads/static/
+__pycache__/
+*.py[cod]
+*.tsbuildinfo
+.coverage
