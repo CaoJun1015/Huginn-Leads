@@ -36,6 +36,14 @@ class RuleTests(unittest.TestCase):
         result = evaluate("现货 ThinkBook 16G 1TB，单台4200元，两台共8200元", CONDITIONS)[0]
         self.assertEqual(result["outcome"], "review")
 
+    def test_multiple_prices_in_one_of_several_lines_are_reviewed(self):
+        results = evaluate(
+            "现货 ThinkBook A 16G 1TB，4200元，2台，另报价4100元\n"
+            "现货 ThinkBook B 16G 1TB，4300元，2台",
+            CONDITIONS,
+        )
+        self.assertEqual([item["outcome"] for item in results], ["review", "match"])
+
     def test_non_candidate_is_empty(self):
         self.assertFalse(is_candidate("戴尔台式机现货", CONDITIONS))
         self.assertEqual(evaluate("戴尔台式机现货", CONDITIONS), [])

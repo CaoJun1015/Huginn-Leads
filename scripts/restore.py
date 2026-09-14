@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import closing
 from datetime import datetime
 from pathlib import Path
 import os
@@ -15,7 +16,7 @@ BACKUPS = ROOT / "backups"
 
 def integrity(path: Path) -> bool:
     try:
-        with sqlite3.connect(path) as connection:
+        with closing(sqlite3.connect(path)) as connection:
             return connection.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
     except sqlite3.Error:
         return False

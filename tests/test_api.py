@@ -165,6 +165,44 @@ class ApiTests(unittest.TestCase):
         self.assertTrue(dismissed.json()["seen"])
         self.assertFalse(dismissed.json()["completed"])
 
+    def test_replay_range_validation(self):
+        self.authenticate()
+        response = self.client.post(
+            "/api/tasks/missing/replay-preview",
+            headers=self.write_headers,
+            json={"start_at": "2026-09-14T12:00:00+08:00", "end_at": "2026-09-14T11:00:00+08:00"},
+        )
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.json()["code"], "validation_error")
+
+        asyncio.run(self.service.connect_account("10001", "测试账号"))
+        asyncio.run(self.service.refresh_sources("10001", [{"group_id": 20001, "group_name": "测试群"}]))
+        source = self.client.get("/api/sources").json()["items"][0]
+        source = self.client.patch(
+            f"/api/sources/{source['id']}", headers=self.write_headers,
+            json={"enabled": True, "version": source["version"]},
+        ).json()
+        task = self.client.post(
+            "/api/tasks", headers=self.write_headers,
+            json={
+                "name": "重跑测试", "conditions": {
+                    "direction": "purchase", "product": "办公本", "aliases": ["ThinkBook"],
+                    "alias_mode": "any", "specs": {}, "price": {}, "quantity": {}, "trade": {},
+                    "source_ids": [source["id"]],
+                },
+            },
+        ).json()
+        preview = self.client.post(
+            f"/api/tasks/{task['id']}/replay-preview", headers=self.write_headers,
+            json={"start_at": "2026-09-14T12:00:00+08:00", "end_at": "2026-09-14T13:00:00+08:00"},
+        ).json()
+        self.assertEqual(preview["start_at"], "2026-09-14T04:00:00+00:00")
+        replay = self.client.post(
+            f"/api/tasks/{task['id']}/replays", headers=self.write_headers,
+            json={"start_at": "2026-09-14T12:00:00+08:00", "end_at": "2026-09-14T13:00:00+08:00"},
+        ).json()
+        self.assertEqual(replay["status"], "completed")
+
 
 if __name__ == "__main__":
     unittest.main()

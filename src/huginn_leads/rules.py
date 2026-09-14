@@ -339,9 +339,9 @@ def evaluate(text: str, conditions: dict[str, Any], fields: list[dict[str, Any]]
     items = candidate_lines or ([text.strip()] if is_candidate(text, conditions) else [])
     if not items:
         return []
-    ambiguous = len(items) == 1 and len(PRICE.findall(items[0])) > 1
     results = []
     for index, item in enumerate(items):
+        ambiguous = len(PRICE.findall(item)) > 1
         direction = _direction(item)
         extracted = _extract(item)
         comparisons = _compare(conditions, direction, extracted)

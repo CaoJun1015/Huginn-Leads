@@ -187,7 +187,6 @@ class Workbench:
             (account_id, source_type, peer_id),
         )
         if not source:
-            await self.record_diagnostic("source_not_enabled", account_id)
             return {"saved": False, "reason": "source_not_enabled"}
 
         raw_days = int(await self.database.get_setting("raw_days") or self.settings.raw_days)
@@ -285,6 +284,18 @@ class Workbench:
                    next_attempt_at=?, lease_until=NULL, updated_at=?
                    WHERE status='processing' AND lease_until<?""",
                 (now, now, now),
+            )
+            connection.execute(
+                """UPDATE replays SET
+                     status=CASE WHEN EXISTS(
+                       SELECT 1 FROM processing_jobs j WHERE j.replay_id=replays.id AND j.status='failed'
+                     ) THEN 'failed' ELSE 'completed' END,
+                     completed_at=?
+                   WHERE status='running' AND NOT EXISTS(
+                     SELECT 1 FROM processing_jobs j
+                     WHERE j.replay_id=replays.id AND j.status IN ('pending','deferred','processing')
+                   )""",
+                (now,),
             )
             row = connection.execute(
                 """SELECT * FROM processing_jobs

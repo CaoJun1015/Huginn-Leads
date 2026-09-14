@@ -24,12 +24,23 @@ async def main() -> int:
 
         def seed(connection):
             connection.execute("INSERT INTO accounts(account_id,connected,updated_at) VALUES ('10001',1,?)", (now.isoformat(),))
-            connection.execute("INSERT INTO sources(account_id,group_id,platform_name,enabled,updated_at) VALUES ('10001','20001','性能测试群',1,?)", (now.isoformat(),))
+            source_id = connection.execute(
+                """INSERT INTO sources(account_id,group_id,platform_name,enabled,updated_at,source_type,peer_id)
+                   VALUES ('10001','20001','性能测试群',1,?,'group','20001')""",
+                (now.isoformat(),),
+            ).lastrowid
             rows = []
             for index in range(10_000):
                 moment = (now - timedelta(seconds=index)).isoformat()
-                rows.append((str(uuid.uuid4()), "qq", "10001", "20001", str(index), str(30000 + index % 100), "测试发布者", moment, moment, f"性能样本 ThinkBook {index}", "[]", (now + timedelta(days=7)).isoformat(), moment))
-            connection.executemany("INSERT INTO raw_messages VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)", rows)
+                rows.append((str(uuid.uuid4()), "qq", "10001", "20001", str(index), str(30000 + index % 100), "测试发布者", moment, moment, f"性能样本 ThinkBook {index}", "[]", (now + timedelta(days=7)).isoformat(), moment, source_id, "group", "20001"))
+            connection.executemany(
+                """INSERT INTO raw_messages(
+                     id,platform,account_id,group_id,native_message_id,sender_id,sender_name,
+                     message_time,received_at,text,segments_json,expires_at,created_at,
+                     source_id,source_type,peer_id
+                   ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                rows,
+            )
         await db.write(seed)
         timings = []
         for _ in range(100):

@@ -11,9 +11,10 @@ import uuid
 from typing import Any, Awaitable, Callable
 
 from fastapi import APIRouter, Body, Depends, FastAPI, HTTPException, Query, Request, Response
+from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from .config import Settings
 from .database import Database, utcnow
@@ -79,8 +80,16 @@ class LeadPatch(BaseModel):
 
 
 class ReplayBody(BaseModel):
-    start_at: str
-    end_at: str
+    start_at: datetime
+    end_at: datetime
+
+    @model_validator(mode="after")
+    def validate_range(self):
+        if self.start_at.tzinfo is None or self.end_at.tzinfo is None:
+            raise ValueError("重跑时间必须包含时区")
+        if self.start_at >= self.end_at:
+            raise ValueError("重跑结束时间必须晚于开始时间")
+        return self
 
 
 class RetentionPatch(BaseModel):
@@ -233,7 +242,7 @@ def install_api(
         if request.url.path.startswith("/api"):
             return JSONResponse(
                 status_code=422,
-                content={"code": "validation_error", "message": "提交内容格式不正确", "details": exc.errors()},
+                content={"code": "validation_error", "message": "提交内容格式不正确", "details": jsonable_encoder(exc.errors())},
             )
         return JSONResponse(status_code=422, content={"detail": exc.errors()})
 
@@ -721,17 +730,21 @@ def install_api(
         task = await database.fetch_one("SELECT * FROM tasks WHERE id=?", (task_id,))
         if not task:
             raise _error(404, "task_not_found", "任务不存在")
+        start_at = body.start_at.astimezone(timezone.utc).isoformat(timespec="seconds")
+        end_at = body.end_at.astimezone(timezone.utc).isoformat(timespec="seconds")
         count = await database.fetch_one(
             """SELECT COUNT(*) AS value FROM raw_messages r
                JOIN task_revision_sources trs ON trs.source_id=r.source_id AND trs.task_id=? AND trs.revision=?
                WHERE r.received_at>=? AND r.received_at<=?""",
-            (task_id, task["current_revision"], body.start_at, body.end_at),
+            (task_id, task["current_revision"], start_at, end_at),
         )
-        return {"eligible_count": count["value"], "start_at": body.start_at, "end_at": body.end_at, "limitation": "只处理仍在原文保留期内的数据"}
+        return {"eligible_count": count["value"], "start_at": start_at, "end_at": end_at, "limitation": "只处理仍在原文保留期内的数据"}
 
     @router.post("/tasks/{task_id}/replays", status_code=202)
     async def create_replay(task_id: str, body: ReplayBody, _session=Depends(require_session)):
         replay_id, now = str(uuid.uuid4()), utcnow()
+        start_at = body.start_at.astimezone(timezone.utc).isoformat(timespec="seconds")
+        end_at = body.end_at.astimezone(timezone.utc).isoformat(timespec="seconds")
 
         def write(connection: sqlite3.Connection) -> dict[str, Any]:
             task = connection.execute("SELECT * FROM tasks WHERE id=?", (task_id,)).fetchone()
@@ -741,11 +754,14 @@ def install_api(
                 """SELECT r.id FROM raw_messages r
                    JOIN task_revision_sources trs ON trs.source_id=r.source_id AND trs.task_id=? AND trs.revision=?
                    WHERE r.received_at>=? AND r.received_at<=?""",
-                (task_id, task["current_revision"], body.start_at, body.end_at),
+                (task_id, task["current_revision"], start_at, end_at),
             ).fetchall()
+            replay_status = "running" if messages else "completed"
             connection.execute(
-                "INSERT INTO replays(id, task_id, revision, start_at, end_at, status, eligible_count, created_at) VALUES (?, ?, ?, ?, ?, 'running', ?, ?)",
-                (replay_id, task_id, task["current_revision"], body.start_at, body.end_at, len(messages), now),
+                """INSERT INTO replays(
+                     id, task_id, revision, start_at, end_at, status, eligible_count, created_at, completed_at
+                   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (replay_id, task_id, task["current_revision"], start_at, end_at, replay_status, len(messages), now, now if not messages else None),
             )
             for message in messages:
                 connection.execute(
@@ -756,7 +772,7 @@ def install_api(
                          lease_until=NULL, error_code=NULL, replay_id=excluded.replay_id, updated_at=excluded.updated_at""",
                     (str(uuid.uuid4()), message["id"], task_id, task["current_revision"], PROCESSOR_VERSION, now, replay_id, now, now),
                 )
-            return {"id": replay_id, "eligible_count": len(messages), "status": "running"}
+            return {"id": replay_id, "eligible_count": len(messages), "status": replay_status}
 
         try:
             return await database.write(write)
@@ -933,10 +949,25 @@ def install_api(
 
     @router.post("/jobs/{job_id}/retry")
     async def retry_job(job_id: str, _session=Depends(require_session)):
-        changed = await database.execute(
-            "UPDATE processing_jobs SET status='pending', attempts=0, error_code=NULL, next_attempt_at=?, updated_at=? WHERE id=? AND status='failed'",
-            (utcnow(), utcnow(), job_id),
-        )
+        now = utcnow()
+
+        def write(connection: sqlite3.Connection) -> bool:
+            job = connection.execute(
+                "SELECT replay_id FROM processing_jobs WHERE id=? AND status='failed'", (job_id,)
+            ).fetchone()
+            if not job:
+                return False
+            connection.execute(
+                "UPDATE processing_jobs SET status='pending', attempts=0, error_code=NULL, next_attempt_at=?, updated_at=? WHERE id=?",
+                (now, now, job_id),
+            )
+            if job["replay_id"]:
+                connection.execute(
+                    "UPDATE replays SET status='running', completed_at=NULL WHERE id=?", (job["replay_id"],)
+                )
+            return True
+
+        changed = await database.write(write)
         if not changed:
             raise _error(404, "failed_job_not_found", "没有找到可重试的失败任务")
         return {"queued": True}

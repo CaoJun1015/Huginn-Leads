@@ -1,13 +1,17 @@
 from datetime import datetime, timedelta, timezone
 import json
 from pathlib import Path
+import sqlite3
+import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from huginn_leads.config import Settings
 from huginn_leads.database import Database, utcnow
 from huginn_leads.security import Security
 from huginn_leads.service import Workbench
+from scripts import restore
 
 
 class ServiceTests(unittest.IsolatedAsyncioTestCase):
@@ -69,6 +73,7 @@ class ServiceTests(unittest.IsolatedAsyncioTestCase):
         result = await self.service.ingest(self.message())
         self.assertFalse(result["saved"])
         self.assertEqual((await self.db.fetch_one("SELECT COUNT(*) AS n FROM raw_messages"))["n"], 0)
+        self.assertEqual((await self.db.fetch_one("SELECT COUNT(*) AS n FROM diagnostics"))["n"], 0)
 
     async def test_enabled_contact_is_processed_like_group(self):
         await self.service.refresh_sources(
@@ -125,6 +130,23 @@ class ServiceTests(unittest.IsolatedAsyncioTestCase):
         result = await self.service.ingest(self.message())
         self.assertEqual(result["jobs"], 2)
         self.assertEqual((await self.db.fetch_one("SELECT COUNT(*) AS n FROM raw_messages"))["n"], 1)
+
+    async def test_replay_reaches_completed_state(self):
+        await self.create_task()
+        await self.service.ingest(self.message())
+        now = utcnow()
+        await self.db.execute(
+            """INSERT INTO replays(id,task_id,revision,start_at,end_at,status,eligible_count,created_at)
+               VALUES ('replay-1','task-1',1,?,?,'running',1,?)""",
+            (now, now, now),
+        )
+        await self.db.execute("UPDATE processing_jobs SET replay_id='replay-1'")
+        job = await self.service._claim_job()
+        await self.service._process_job(job)
+        self.assertIsNone(await self.service._claim_job())
+        replay = await self.db.fetch_one("SELECT status,completed_at FROM replays WHERE id='replay-1'")
+        self.assertEqual(replay["status"], "completed")
+        self.assertIsNotNone(replay["completed_at"])
 
     async def test_expired_raw_keeps_visible_job_state(self):
         await self.create_task()
@@ -193,6 +215,42 @@ class MigrationTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(message["source_id"], 7)
             self.assertEqual((await upgraded.fetch_one("SELECT COUNT(*) AS n FROM tasks"))["n"], 1)
             self.assertEqual((await upgraded.fetch_one("SELECT name FROM templates WHERE id='supply-demand'"))["name"], "电脑经销商模式")
+
+
+class RestoreTests(unittest.TestCase):
+    def test_restore_replaces_database_and_keeps_emergency_backup(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            database = root / "data" / "huginn-leads.db"
+            backups = root / "backups"
+            snapshot = root / "snapshot.db"
+            database.parent.mkdir()
+            backups.mkdir()
+            for path, value in ((database, "before"), (snapshot, "after")):
+                connection = sqlite3.connect(path)
+                try:
+                    connection.execute("CREATE TABLE marker(value TEXT NOT NULL)")
+                    connection.execute("INSERT INTO marker VALUES (?)", (value,))
+                    connection.commit()
+                finally:
+                    connection.close()
+            with (
+                patch.object(restore, "DATABASE", database),
+                patch.object(restore, "BACKUPS", backups),
+                patch.object(sys, "argv", ["restore.py", str(snapshot)]),
+            ):
+                self.assertEqual(restore.main(), 0)
+            connection = sqlite3.connect(database)
+            try:
+                self.assertEqual(connection.execute("SELECT value FROM marker").fetchone()[0], "after")
+            finally:
+                connection.close()
+            emergency = next(backups.glob("before-restore-*.db"))
+            connection = sqlite3.connect(emergency)
+            try:
+                self.assertEqual(connection.execute("SELECT value FROM marker").fetchone()[0], "before")
+            finally:
+                connection.close()
 
 
 if __name__ == "__main__":
