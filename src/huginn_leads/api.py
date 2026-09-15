@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from .config import Settings
 from .database import Database, utcnow
+from .external import ExternalCatalog, ExternalSourceError, external_presets, source_view, validate_source_config
 from .rules import DEFAULT_TEMPLATE_FIELDS, PROCESSOR_VERSION, validate_conditions, validate_template_fields
 from .security import Security
 from .service import Workbench
@@ -64,6 +65,24 @@ class TemplateCreate(BaseModel):
 
 
 class TemplatePatch(TemplateCreate):
+    version: int
+
+
+class ExternalSourceCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+    database_path: str = Field(min_length=1, max_length=2000)
+    query_text: str = Field(min_length=1, max_length=20000)
+    key_column: str = Field(min_length=1, max_length=120)
+    template_id: str = Field(min_length=1, max_length=120)
+    field_mapping: dict[str, str] = Field(default_factory=dict)
+    defaults: dict[str, Any] = Field(default_factory=dict)
+    name_fields: list[str] = Field(default_factory=list)
+    alias_fields: list[str] = Field(default_factory=list)
+    alias_mode: str = "any"
+    task_source_ids: list[int] = Field(default_factory=list)
+
+
+class ExternalSourcePatch(ExternalSourceCreate):
     version: int
 
 
@@ -144,6 +163,7 @@ def install_api(
     probe_connections: Callable[[], Awaitable[dict[str, Any]]] | None = None,
 ) -> None:
     router = APIRouter(prefix="/api")
+    external_catalog = ExternalCatalog(database)
     confirmations: dict[str, tuple[str, datetime]] = {}
 
     def issue_confirmation(scope: str) -> str:
@@ -200,6 +220,12 @@ def install_api(
         if not revision:
             raise _error(409, "template_version_conflict", "业务模式版本已变化，请刷新后重试")
         return template, _json(revision["fields_json"], [])
+
+    def external_http_error(exc: ExternalSourceError) -> HTTPException:
+        status = 404 if exc.code == "external_source_not_found" else 409 if exc.code in {
+            "external_source_archived", "template_version_conflict",
+        } else 400
+        return _error(status, exc.code, str(exc), exc.details)
 
     async def build_status() -> dict[str, Any]:
         status = await service.status()
@@ -478,6 +504,129 @@ def install_api(
         if not changed:
             raise _error(409, "template_not_archived", "内置模式不能停用，或业务模式已经变化")
         return {"archived": True}
+
+    @router.get("/external-source-presets")
+    async def get_external_source_presets(_session=Depends(require_session)):
+        return {"items": external_presets()}
+
+    @router.get("/external-sources")
+    async def get_external_sources(include_archived: bool = False, _session=Depends(require_session)):
+        where = "" if include_archived else " WHERE es.status='active'"
+        rows = await database.fetch_all(
+            """SELECT es.*,t.name AS template_name,
+               (SELECT COUNT(*) FROM external_records er WHERE er.external_source_id=es.id) AS record_count,
+               (SELECT COUNT(*) FROM external_records er WHERE er.external_source_id=es.id AND er.active=1) AS active_records,
+               (SELECT COUNT(*) FROM external_records er WHERE er.external_source_id=es.id AND er.task_id IS NOT NULL) AS published_records,
+               (SELECT COUNT(*) FROM external_records er WHERE er.external_source_id=es.id AND er.active=1 AND er.task_id IS NULL) AS unpublished_active_records
+               FROM external_sources es JOIN templates t ON t.id=es.template_id"""
+            + where + " ORDER BY es.updated_at DESC,es.name"
+        )
+        return {"items": [source_view(row) for row in rows]}
+
+    @router.post("/external-sources", status_code=201)
+    async def create_external_source(body: ExternalSourceCreate, _session=Depends(require_session)):
+        template, fields = await template_revision(body.template_id)
+        if template["status"] != "active":
+            raise _error(409, "template_archived", "只能选择当前启用的业务模式")
+        try:
+            config = validate_source_config(body.model_dump(), fields)
+        except ExternalSourceError as exc:
+            raise external_http_error(exc) from exc
+        source_id, now = str(uuid.uuid4()), utcnow()
+        await database.execute(
+            """INSERT INTO external_sources(
+                 id,name,database_path,query_text,key_column,template_id,template_version,
+                 field_mapping_json,defaults_json,name_fields_json,alias_fields_json,
+                 alias_mode,task_source_ids_json,created_at,updated_at
+               ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (
+                source_id, body.name.strip(), body.database_path.strip(), config["query_text"],
+                config["key_column"], body.template_id, template["current_version"],
+                json.dumps(config["field_mapping"], ensure_ascii=False),
+                json.dumps(config["defaults"], ensure_ascii=False),
+                json.dumps(config["name_fields"], ensure_ascii=False),
+                json.dumps(config["alias_fields"], ensure_ascii=False), config["alias_mode"],
+                json.dumps(config["task_source_ids"]), now, now,
+            ),
+        )
+        row = await database.fetch_one("SELECT * FROM external_sources WHERE id=?", (source_id,))
+        return source_view(row or {})
+
+    @router.patch("/external-sources/{source_id}")
+    async def patch_external_source(source_id: str, body: ExternalSourcePatch, _session=Depends(require_session)):
+        current = await database.fetch_one("SELECT * FROM external_sources WHERE id=?", (source_id,))
+        if not current:
+            raise _error(404, "external_source_not_found", "外部数据源不存在")
+        template, fields = await template_revision(body.template_id)
+        if template["status"] != "active":
+            raise _error(409, "template_archived", "只能选择当前启用的业务模式")
+        try:
+            config = validate_source_config(body.model_dump(), fields)
+        except ExternalSourceError as exc:
+            raise external_http_error(exc) from exc
+        changed = await database.execute(
+            """UPDATE external_sources SET
+                 name=?,database_path=?,query_text=?,key_column=?,template_id=?,template_version=?,
+                 field_mapping_json=?,defaults_json=?,name_fields_json=?,alias_fields_json=?,
+                 alias_mode=?,task_source_ids_json=?,status='active',updated_at=?,version=version+1
+               WHERE id=? AND version=?""",
+            (
+                body.name.strip(), body.database_path.strip(), config["query_text"], config["key_column"],
+                body.template_id, template["current_version"],
+                json.dumps(config["field_mapping"], ensure_ascii=False),
+                json.dumps(config["defaults"], ensure_ascii=False),
+                json.dumps(config["name_fields"], ensure_ascii=False),
+                json.dumps(config["alias_fields"], ensure_ascii=False), config["alias_mode"],
+                json.dumps(config["task_source_ids"]), utcnow(), source_id, body.version,
+            ),
+        )
+        if not changed:
+            raise _error(409, "version_conflict", "外部数据源已经变化，请刷新后重试")
+        return source_view(await database.fetch_one("SELECT * FROM external_sources WHERE id=?", (source_id,)) or {})
+
+    @router.post("/external-sources/{source_id}/archive")
+    async def archive_external_source(source_id: str, version: int = Body(embed=True), _session=Depends(require_session)):
+        changed = await database.execute(
+            "UPDATE external_sources SET status='archived',updated_at=?,version=version+1 WHERE id=? AND version=?",
+            (utcnow(), source_id, version),
+        )
+        if not changed:
+            raise _error(409, "version_conflict", "外部数据源已经变化，请刷新后重试")
+        return {"archived": True}
+
+    @router.post("/external-sources/{source_id}/preview")
+    async def preview_external_source(source_id: str, _session=Depends(require_session)):
+        try:
+            return await external_catalog.preview(source_id)
+        except ExternalSourceError as exc:
+            raise external_http_error(exc) from exc
+
+    @router.post("/external-sources/{source_id}/imports")
+    async def import_external_source(source_id: str, _session=Depends(require_session)):
+        try:
+            return await external_catalog.import_records(source_id)
+        except ExternalSourceError as exc:
+            await database.execute(
+                "UPDATE external_sources SET last_error=?,updated_at=? WHERE id=?",
+                (str(exc)[:500], utcnow(), source_id),
+            )
+            raise external_http_error(exc) from exc
+
+    @router.get("/external-sources/{source_id}/records")
+    async def get_external_records(source_id: str, _session=Depends(require_session)):
+        try:
+            return {"items": await external_catalog.records(source_id)}
+        except ExternalSourceError as exc:
+            raise external_http_error(exc) from exc
+
+    @router.post("/external-sources/{source_id}/publish")
+    async def publish_external_source(source_id: str, _session=Depends(require_session)):
+        try:
+            return await external_catalog.publish(source_id)
+        except (ExternalSourceError, ValueError) as exc:
+            if isinstance(exc, ExternalSourceError):
+                raise external_http_error(exc) from exc
+            raise _error(400, "invalid_external_record", str(exc)) from exc
 
     @router.get("/tasks")
     async def get_tasks(

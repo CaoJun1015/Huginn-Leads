@@ -1,5 +1,6 @@
 import asyncio
 from pathlib import Path
+import sqlite3
 import tempfile
 import unittest
 
@@ -164,6 +165,75 @@ class ApiTests(unittest.TestCase):
         )
         self.assertTrue(dismissed.json()["seen"])
         self.assertFalse(dismissed.json()["completed"])
+
+    def test_generic_external_sqlite_import_and_publish(self):
+        self.authenticate()
+        template = self.client.post(
+            "/api/templates", headers=self.write_headers,
+            json={"name": "通用服务模式", "fields": [
+                {"key": "service", "label": "服务", "type": "text", "required": True, "show_in_list": True, "match": False},
+                {"key": "available_slots", "label": "可用数量", "type": "number", "required": False, "show_in_list": True, "match": False},
+            ]},
+        ).json()
+        asyncio.run(self.service.connect_account("10001", "测试账号"))
+        asyncio.run(self.service.refresh_sources("10001", [{"group_id": 20001, "group_name": "测试群"}]))
+        qq_source = self.client.get("/api/sources").json()["items"][0]
+        qq_source = self.client.patch(
+            f"/api/sources/{qq_source['id']}", headers=self.write_headers,
+            json={"enabled": True, "version": qq_source["version"]},
+        ).json()
+
+        external_path = self.settings.root / "other-app.db"
+        connection = sqlite3.connect(external_path)
+        try:
+            connection.execute("CREATE TABLE stock(code TEXT PRIMARY KEY,title TEXT NOT NULL,quantity INTEGER NOT NULL)")
+            connection.executemany(
+                "INSERT INTO stock VALUES (?,?,?)",
+                [("a-1", "物品甲", 3), ("b-1", "物品乙", 5)],
+            )
+            connection.commit()
+        finally:
+            connection.close()
+
+        payload = {
+            "name": "其他系统库存",
+            "database_path": str(external_path),
+            "query_text": "SELECT code,title,quantity FROM stock WHERE quantity>0",
+            "key_column": "code",
+            "template_id": template["id"],
+            "field_mapping": {"service": "title", "available_slots": "quantity"},
+            "defaults": {},
+            "name_fields": ["service"],
+            "alias_fields": ["service"],
+            "alias_mode": "any",
+            "task_source_ids": [qq_source["id"]],
+        }
+        created = self.client.post("/api/external-sources", headers=self.write_headers, json=payload)
+        self.assertEqual(created.status_code, 201, created.text)
+        source_id = created.json()["id"]
+        preview = self.client.post(f"/api/external-sources/{source_id}/preview", headers=self.write_headers)
+        self.assertEqual(preview.status_code, 200, preview.text)
+        self.assertEqual((preview.json()["total"], preview.json()["new"]), (2, 2))
+
+        imported = self.client.post(f"/api/external-sources/{source_id}/imports", headers=self.write_headers)
+        self.assertEqual(imported.status_code, 200, imported.text)
+        self.assertEqual(imported.json()["created"], 2)
+        preview = self.client.post(f"/api/external-sources/{source_id}/preview", headers=self.write_headers).json()
+        self.assertEqual(preview["unchanged"], 2)
+
+        published = self.client.post(f"/api/external-sources/{source_id}/publish", headers=self.write_headers)
+        self.assertEqual(published.status_code, 200, published.text)
+        self.assertEqual(published.json()["published"], 2)
+        records = self.client.get(f"/api/external-sources/{source_id}/records").json()["items"]
+        self.assertTrue(all(record["task_id"] for record in records))
+        tasks = self.client.get("/api/tasks").json()["items"]
+        self.assertEqual({task["name"] for task in tasks}, {"物品甲", "物品乙"})
+        self.assertEqual({task["values"]["available_slots"] for task in tasks}, {3, 5})
+
+        unsafe = {**payload, "name": "非法查询", "query_text": "DELETE FROM stock"}
+        response = self.client.post("/api/external-sources", headers=self.write_headers, json=unsafe)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()["code"], "unsafe_query")
 
     def test_replay_range_validation(self):
         self.authenticate()

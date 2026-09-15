@@ -27,6 +27,8 @@ button.danger { color: var(--red); border-color: #f0b9b5; }
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 input, select, textarea { width: 100%; min-height: 41px; padding: 8px 10px; border: 1px solid #ccd6e2; border-radius: 8px; background: #fff; }
 textarea { resize: vertical; }
+.code-input { font-family: Consolas, "SFMono-Regular", monospace; font-size: 12px; line-height: 1.45; }
+.import-metrics { margin-bottom: 0; }
 label { display: grid; gap: 6px; color: #344054; font-size: 14px; font-weight: 650; }
 label small { display: block; font-weight: 400; color: var(--muted); }
 h1, h2, h3, p { margin-top: 0; }
@@ -85,7 +87,7 @@ small { color: var(--muted); }
 .task-counts strong { min-height: 25px; font-size: 18px; }
 .task-counts div:last-child strong { padding-top: 4px; font-size: 12px; }
 .task-counts span { color: var(--muted); font-size: 12px; }
-.task-card footer { display: flex; gap: 7px; justify-content: flex-end; }
+.task-card footer { display: flex; flex-wrap: wrap; gap: 7px; justify-content: flex-end; }
 .task-card footer button { min-height: 34px; padding-block: 5px; font-size: 13px; }
 .badge { display: inline-flex; align-items: center; width: fit-content; min-height: 25px; padding: 2px 8px; border-radius: 99px; color: #1d4ed8; background: #edf4ff; font-size: 12px; white-space: nowrap; }
 .badge.active, .badge.match, .badge.supply, .badge.contacted, .badge.completed { color: #087a52; background: #e9fbf4; }

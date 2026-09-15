@@ -1,11 +1,12 @@
 import { FormEvent, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 type Json = Record<string, any>
-type View = 'tasks' | 'templates' | 'leads' | 'sources' | 'messages' | 'operations'
+type View = 'tasks' | 'templates' | 'external' | 'leads' | 'sources' | 'messages' | 'operations'
 
 const labels: Record<View, [string, string]> = {
   tasks: ['我的任务', '管理正在关注的业务条件'],
   templates: ['业务模式', '配置任务字段和列表列'],
+  external: ['外部数据', '只读导入业务记录并发布线索任务'],
   leads: ['线索工作台', '核对匹配理由并记录处理进度'],
   sources: ['来源管理', '按账号选择允许保存的群和联系人'],
   messages: ['原文与复查', '搜索保留期内消息并修正漏判'],
@@ -182,6 +183,66 @@ function Templates({ templates, reload, notify }: { templates: Json[], reload: (
   </>
 }
 
+function ExternalSourceEditor({ open, value, presets, templates, sources, onClose, onSaved }: { open: boolean, value: Json | null, presets: Json[], templates: Json[], sources: Json[], onClose: () => void, onSaved: () => Promise<void> }) {
+  const [form, setForm] = useState<Json>({}); const [error, setError] = useState(''); const [busy, setBusy] = useState(false)
+  function editable(source: Json) { return { ...source, field_mapping_text: JSON.stringify(source.field_mapping || {}, null, 2), defaults_text: JSON.stringify(source.defaults || {}, null, 2), name_fields_text: (source.name_fields || []).join(', '), alias_fields_text: (source.alias_fields || []).join(', ') } }
+  useEffect(() => {
+    if (!open) return
+    const base = value || presets[0] || { name: '', template_id: templates[0]?.id || '', query_text: '', key_column: 'external_key', field_mapping: {}, defaults: {}, name_fields: [], alias_fields: [], alias_mode: 'any' }
+    setForm(editable({ ...base, preset_id: value ? '' : base.id || '', name: value?.name || base.name || '', database_path: value?.database_path || '', task_source_ids: value?.task_source_ids || sources.filter(item => item.enabled).map(item => item.id) })); setError('')
+  }, [open, value, presets, templates, sources])
+  function field(name: string, next: any) { setForm((old: Json) => ({ ...old, [name]: next })) }
+  function preset(id: string) { const item = presets.find(candidate => candidate.id === id); setForm(editable(item ? { ...item, preset_id: id, name: item.name, database_path: form.database_path || '', task_source_ids: form.task_source_ids || [] } : { preset_id: '', name: '', database_path: form.database_path || '', template_id: templates[0]?.id || '', query_text: '', key_column: 'external_key', field_mapping: {}, defaults: {}, name_fields: [], alias_fields: [], alias_mode: 'any', task_source_ids: form.task_source_ids || [] })) }
+  async function save(event: FormEvent) {
+    event.preventDefault(); setBusy(true); setError('')
+    try {
+      const payload = {
+        name: form.name, database_path: form.database_path, query_text: form.query_text, key_column: form.key_column,
+        template_id: form.template_id, field_mapping: JSON.parse(form.field_mapping_text || '{}'), defaults: JSON.parse(form.defaults_text || '{}'),
+        name_fields: String(form.name_fields_text || '').split(',').map(value => value.trim()).filter(Boolean),
+        alias_fields: String(form.alias_fields_text || '').split(',').map(value => value.trim()).filter(Boolean), alias_mode: form.alias_mode || 'any',
+        task_source_ids: form.task_source_ids || [], ...(value ? { version: value.version } : {}),
+      }
+      await api(value ? `/external-sources/${value.id}` : '/external-sources', { method: value ? 'PATCH' : 'POST', body: JSON.stringify(payload) })
+      await onSaved(); onClose()
+    } catch (err) { setError((err as Error).message) } finally { setBusy(false) }
+  }
+  const enabled = sources.filter(source => source.enabled)
+  const template = templates.find(item => item.id === form.template_id)
+  return <Dialog open={open} title={value ? '编辑外部数据源' : '新建外部数据源'} onClose={onClose} wide><form className="form-grid" onSubmit={save}>
+    {!value && <label>快速预设<select value={form.preset_id || ''} onChange={e => preset(e.target.value)}><option value="">自定义 SQLite</option>{presets.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>}
+    <label>数据源名称<input value={form.name || ''} onChange={e => field('name', e.target.value)} required /></label>
+    <label className="full">数据库绝对路径<input value={form.database_path || ''} onChange={e => field('database_path', e.target.value)} required placeholder="D:\\data\\app.db" /><small>只读打开，Huginn 不会修改外部数据库。</small></label>
+    <label>业务模式<select value={form.template_id || ''} onChange={e => field('template_id', e.target.value)} required>{templates.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+    <label>唯一标识列<input value={form.key_column || ''} onChange={e => field('key_column', e.target.value)} required /></label>
+    <label className="full">只读查询<textarea className="code-input" rows={9} value={form.query_text || ''} onChange={e => field('query_text', e.target.value)} required /><small>只允许一条 SELECT 或 WITH；合并、过滤和外部键由查询结果定义。</small></label>
+    <label>字段映射 JSON<textarea className="code-input" rows={7} value={form.field_mapping_text || ''} onChange={e => field('field_mapping_text', e.target.value)} required /><small>{'{"Huginn字段":"查询结果列"}'}。当前模式字段：{template?.fields?.map((item: Json) => item.key).join('、') || '无'}</small></label>
+    <label>默认值 JSON<textarea className="code-input" rows={7} value={form.defaults_text || ''} onChange={e => field('defaults_text', e.target.value)} /><small>用于外部数据中没有的固定值。</small></label>
+    <label>任务名称字段<input value={form.name_fields_text || ''} onChange={e => field('name_fields_text', e.target.value)} required /><small>多个字段用逗号分隔。</small></label>
+    <label>触发关键词字段<input value={form.alias_fields_text || ''} onChange={e => field('alias_fields_text', e.target.value)} required /></label>
+    <label>关键词组合<select value={form.alias_mode || 'any'} onChange={e => field('alias_mode', e.target.value)}><option value="any">任一命中</option><option value="all">全部命中</option></select></label>
+    <fieldset className="full source-picker"><legend>任务监控来源</legend>{enabled.length ? enabled.map(source => <label key={source.id} className="check"><input type="checkbox" checked={(form.task_source_ids || []).includes(source.id)} onChange={e => field('task_source_ids', e.target.checked ? [...(form.task_source_ids || []), source.id] : (form.task_source_ids || []).filter((id: number) => id !== source.id))} />{source.display_name}<small>{source.source_type === 'contact' ? '联系人' : '群'} · {source.account_name}</small></label>) : <p className="empty-inline">可以先保存配置；发布任务前需在来源管理中启用 QQ 来源。</p>}</fieldset>
+    {error && <div className="alert error full">{error}</div>}<footer className="dialog-actions full"><button type="button" onClick={onClose}>取消</button><button className="primary" disabled={busy}>{busy ? '保存中…' : '保存配置'}</button></footer>
+  </form></Dialog>
+}
+
+function ExternalSources({ templates, sources, reloadShared, notify }: { templates: Json[], sources: Json[], reloadShared: () => Promise<void>, notify: (v: string) => void }) {
+  const [items, setItems] = useState<Json[]>([]); const [presets, setPresets] = useState<Json[]>([]); const [selected, setSelected] = useState<Json | null>(null); const [open, setOpen] = useState(false); const [preview, setPreview] = useState<Json | null>(null); const [busy, setBusy] = useState('')
+  const load = useCallback(async () => { const [configured, available] = await Promise.all([api('/external-sources'), api('/external-source-presets')]); setItems(configured.items); setPresets(available.items) }, [])
+  useEffect(() => { load().catch(err => notify(err.message)) }, [load, notify])
+  async function inspect(item: Json) { setBusy(item.id); try { setPreview({ ...(await api(`/external-sources/${item.id}/preview`, { method: 'POST' })), source: item }) } catch (err) { notify((err as Error).message) } finally { setBusy('') } }
+  async function importRecords() { if (!preview) return; setBusy(preview.source.id); try { const result = await api(`/external-sources/${preview.source.id}/imports`, { method: 'POST' }); setPreview(null); await load(); notify(`已导入 ${result.total} 条：新增 ${result.created}，更新 ${result.changed}，失效 ${result.deactivated}`) } catch (err) { notify((err as Error).message) } finally { setBusy('') } }
+  async function publish(item: Json) { if (!confirm(`将 ${item.unpublished_active_records} 条未关联记录发布为线索任务？`)) return; setBusy(item.id); try { const result = await api(`/external-sources/${item.id}/publish`, { method: 'POST' }); await Promise.all([load(), reloadShared()]); notify(`已发布 ${result.published} 个任务`) } catch (err) { notify((err as Error).message) } finally { setBusy('') } }
+  async function archive(item: Json) { if (!confirm('停用数据源？已导入记录和任务不会删除。')) return; try { await api(`/external-sources/${item.id}/archive`, { method: 'POST', body: JSON.stringify({ version: item.version }) }); await load(); notify('数据源已停用') } catch (err) { notify((err as Error).message) } }
+  async function saved() { await load() }
+  return <><div className="page-toolbar"><div><h2>外部业务数据</h2><p>定义只读 SQLite 查询，把结果映射到任意业务模式，再由 Huginn 本地发布任务。</p></div><button className="primary" onClick={() => { setSelected(null); setOpen(true) }}>＋ 添加数据源</button></div>
+    <div className="template-grid">{items.map(item => <article className="task-card" key={item.id}><header><div><h3>{item.name}</h3><small>{item.template_name} v{item.template_version} · SQLite</small></div><Badge value={item.status} /></header><p className="muted path">{item.database_path}</p><div className="task-counts"><div><strong>{item.active_records}</strong><span>有效记录</span></div><div><strong>{item.published_records}</strong><span>已发布</span></div><div><strong>{formatTime(item.last_imported_at)}</strong><span>最近导入</span></div></div>{item.last_error && <div className="alert error">{item.last_error}</div>}<footer><button onClick={() => { setSelected(item); setOpen(true) }}>编辑</button><button onClick={() => inspect(item)} disabled={busy === item.id}>{busy === item.id ? '读取中…' : '预览变化'}</button><button className="primary" onClick={() => publish(item)} disabled={busy === item.id || !item.unpublished_active_records}>发布任务</button><button className="danger" onClick={() => archive(item)}>停用</button></footer></article>)}</div>
+    {!items.length && <div className="empty-state"><strong>还没有外部数据源</strong><p>可使用 Diaohuo 示例，也可完全自定义 SQLite 查询和字段映射。</p></div>}
+    <ExternalSourceEditor open={open} value={selected} presets={presets} templates={templates} sources={sources} onClose={() => setOpen(false)} onSaved={saved} />
+    <Dialog open={!!preview} title="导入预览" onClose={() => setPreview(null)} wide>{preview && <div className="form-stack"><div className="metrics import-metrics"><div><span>查询结果</span><strong>{preview.total}</strong></div><div><span>新增</span><strong>{preview.new}</strong></div><div><span>变更 / 恢复</span><strong>{preview.changed + preview.reactivated}</strong></div><div><span>本次失效</span><strong>{preview.missing}</strong></div></div><section className="table-card"><table><thead><tr><th>外部标识</th><th>任务名称</th><th>触发关键词</th></tr></thead><tbody>{preview.sample.map((record: Json) => <tr key={record.external_key}><td><span className="ellipsis">{record.external_key}</span></td><td>{record.display_name}</td><td>{record.aliases.join('、')}</td></tr>)}</tbody></table></section><p className="help">预览最多显示 20 条。导入只更新 Huginn 本地快照，不会立即发布任务。</p><footer className="dialog-actions"><button onClick={() => setPreview(null)}>取消</button><button className="primary" onClick={importRecords} disabled={!!busy}>确认导入 Huginn</button></footer></div>}</Dialog>
+  </>
+}
+
 function Sources({ accounts, sources, reload, notify }: { accounts: Json[], sources: Json[], reload: () => Promise<void>, notify: (v: string) => void }) {
   const [q, setQ] = useState(''); const [busy, setBusy] = useState(false); const [tab, setTab] = useState<'group' | 'contact'>('group')
   async function refresh() { setBusy(true); try { const result = await api('/sources/refresh', { method: 'POST', body: JSON.stringify({ account_id: null }) }); await reload(); notify(result.errors.length ? '部分来源刷新失败，请检查连接。' : '群和联系人已刷新，新来源默认关闭。') } catch (err) { notify((err as Error).message) } finally { setBusy(false) } }
@@ -284,6 +345,7 @@ export default function App() {
   const content = useMemo(() => {
     if (view === 'tasks') return <Tasks sources={sources} templates={templates} notify={notify} reloadShared={loadShared} />
     if (view === 'templates') return <Templates templates={templates} reload={loadShared} notify={notify} />
+    if (view === 'external') return <ExternalSources templates={templates} sources={sources} reloadShared={loadShared} notify={notify} />
     if (view === 'sources') return <Sources accounts={accounts} sources={sources} reload={loadShared} notify={notify} />
     if (view === 'leads') return <Leads tasks={tasks} notify={notify} />
     if (view === 'messages') return <Messages sources={sources} tasks={tasks} notify={notify} />
@@ -292,5 +354,5 @@ export default function App() {
   if (!auth) return <div className="loading">正在打开工作台…</div>
   if (!auth.authenticated) return <Auth initialized={auth.initialized} onDone={token => { csrf = token; setAuth({ initialized: true, authenticated: true }) }} />
   async function logout() { await api('/auth/logout', { method: 'POST' }); csrf = ''; setAuth({ initialized: true, authenticated: false }) }
-  return <div className="app-shell"><aside className={menu ? 'sidebar open' : 'sidebar'}><div className="brand"><img src="/huginn-leads-logo.png" alt="" /><span><strong>Huginn Leads</strong><small>消息工作台</small></span></div><nav>{(Object.keys(labels) as View[]).map(name => <button key={name} className={view === name ? 'active' : ''} onClick={() => { setView(name); setMenu(false) }}><span>{({ tasks: '▦', templates: '◇', leads: '◎', sources: '⌁', messages: '☷', operations: '◌' } as Record<View, string>)[name]}</span>{labels[name][0]}</button>)}</nav><div className="sidebar-footer"><div className="live"><i className={status.accounts_connected ? 'online' : ''} /><span>{status.accounts_connected || 0} 个账号在线</span></div><button onClick={logout}>退出登录</button></div></aside><main className="workspace"><header className="topbar"><button className="menu-button" onClick={() => setMenu(!menu)} aria-label="打开导航">☰</button><div><h1>{labels[view][0]}</h1><span>{labels[view][1]}</span></div><button className="status-link" onClick={() => onboarding.completed ? setView('operations') : setWizard(true)}><i className={!onboarding.completed || status.failed ? 'problem' : 'online'} />{!onboarding.completed ? '首次配置未完成' : status.failed ? `${status.failed} 个失败任务` : `最近保存 ${formatTime(status.last_saved_at)}`}</button></header><div className="content">{content}</div></main>{menu && <button className="scrim" aria-label="关闭导航" onClick={() => setMenu(false)} />}<Onboarding open={wizard} value={onboarding} sources={sources} onChange={setOnboarding} onClose={() => setWizard(false)} reload={loadShared} notify={notify} />{toast && <div className="toast" role="status">{toast}</div>}</div>
+  return <div className="app-shell"><aside className={menu ? 'sidebar open' : 'sidebar'}><div className="brand"><img src="/huginn-leads-logo.png" alt="" /><span><strong>Huginn Leads</strong><small>消息工作台</small></span></div><nav>{(Object.keys(labels) as View[]).map(name => <button key={name} className={view === name ? 'active' : ''} onClick={() => { setView(name); setMenu(false) }}><span>{({ tasks: '▦', templates: '◇', external: '⇲', leads: '◎', sources: '⌁', messages: '☷', operations: '◌' } as Record<View, string>)[name]}</span>{labels[name][0]}</button>)}</nav><div className="sidebar-footer"><div className="live"><i className={status.accounts_connected ? 'online' : ''} /><span>{status.accounts_connected || 0} 个账号在线</span></div><button onClick={logout}>退出登录</button></div></aside><main className="workspace"><header className="topbar"><button className="menu-button" onClick={() => setMenu(!menu)} aria-label="打开导航">☰</button><div><h1>{labels[view][0]}</h1><span>{labels[view][1]}</span></div><button className="status-link" onClick={() => onboarding.completed ? setView('operations') : setWizard(true)}><i className={!onboarding.completed || status.failed ? 'problem' : 'online'} />{!onboarding.completed ? '首次配置未完成' : status.failed ? `${status.failed} 个失败任务` : `最近保存 ${formatTime(status.last_saved_at)}`}</button></header><div className="content">{content}</div></main>{menu && <button className="scrim" aria-label="关闭导航" onClick={() => setMenu(false)} />}<Onboarding open={wizard} value={onboarding} sources={sources} onChange={setOnboarding} onClose={() => setWizard(false)} reload={loadShared} notify={notify} />{toast && <div className="toast" role="status">{toast}</div>}</div>
 }

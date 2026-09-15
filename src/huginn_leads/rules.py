@@ -89,6 +89,38 @@ def validate_template_fields(fields: Any) -> list[dict[str, Any]]:
     return cleaned
 
 
+def validate_field_values(raw_values: Any, fields: list[dict[str, Any]]) -> dict[str, Any]:
+    if not isinstance(raw_values, dict):
+        raise ValueError("字段值格式无效")
+    values: dict[str, Any] = {}
+    for field in fields:
+        value = raw_values.get(field["key"])
+        empty = value is None or value == ""
+        if field["required"] and empty:
+            raise ValueError(f"{field['label']}不能为空")
+        if empty:
+            continue
+        if field["type"] == "number":
+            if isinstance(value, bool):
+                raise ValueError(f"{field['label']}必须是数字")
+            try:
+                value = float(value)
+                value = int(value) if value.is_integer() else value
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"{field['label']}必须是数字") from exc
+        elif field["type"] == "boolean":
+            if not isinstance(value, bool):
+                raise ValueError(f"{field['label']}必须是开关值")
+        else:
+            value = str(value).strip()
+            if len(value) > 500:
+                raise ValueError(f"{field['label']}内容过长")
+            if field["type"] == "select" and value not in {option["value"] for option in field.get("options", [])}:
+                raise ValueError(f"{field['label']}选项无效")
+        values[field["key"]] = value
+    return values
+
+
 def validate_conditions(data: dict[str, Any], fields: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     if fields is not None:
         aliases = [str(value).strip() for value in data.get("aliases", []) if str(value).strip()]
@@ -100,35 +132,7 @@ def validate_conditions(data: dict[str, Any], fields: list[dict[str, Any]] | Non
             raise ValueError("关键词组合只能是 any 或 all")
         if not source_ids or any(not isinstance(value, int) for value in source_ids):
             raise ValueError("至少选择一个有效来源")
-        raw_values = data.get("values") or {}
-        if not isinstance(raw_values, dict):
-            raise ValueError("任务字段值格式无效")
-        values: dict[str, Any] = {}
-        for field in fields:
-            value = raw_values.get(field["key"])
-            empty = value is None or value == ""
-            if field["required"] and empty:
-                raise ValueError(f"{field['label']}不能为空")
-            if empty:
-                continue
-            if field["type"] == "number":
-                if isinstance(value, bool):
-                    raise ValueError(f"{field['label']}必须是数字")
-                try:
-                    value = float(value)
-                    value = int(value) if value.is_integer() else value
-                except (TypeError, ValueError) as exc:
-                    raise ValueError(f"{field['label']}必须是数字") from exc
-            elif field["type"] == "boolean":
-                if not isinstance(value, bool):
-                    raise ValueError(f"{field['label']}必须是开关值")
-            else:
-                value = str(value).strip()
-                if len(value) > 500:
-                    raise ValueError(f"{field['label']}内容过长")
-                if field["type"] == "select" and value not in {option["value"] for option in field.get("options", [])}:
-                    raise ValueError(f"{field['label']}选项无效")
-            values[field["key"]] = value
+        values = validate_field_values(data.get("values") or {}, fields)
         return {
             "aliases": list(dict.fromkeys(aliases)), "alias_mode": alias_mode,
             "source_ids": list(dict.fromkeys(source_ids)), "values": values,
