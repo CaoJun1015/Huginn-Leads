@@ -834,31 +834,63 @@ def install_api(
         size, point = limit_value(limit), _decode_cursor(cursor)
         clauses, params = [], []
         if q:
-            clauses.append("r.text LIKE ?")
-            params.append(f"%{q}%")
+            clauses.append("(m.text LIKE ? OR m.sender_name LIKE ? OR m.sender_id LIKE ?)")
+            params.extend([f"%{q}%"] * 3)
         if source_id:
-            clauses.append("s.id=?")
+            clauses.append("m.source_id=?")
             params.append(source_id)
-        if result == "failed":
-            clauses.append("EXISTS(SELECT 1 FROM processing_jobs jf WHERE jf.message_id=r.id AND jf.status='failed')")
-        elif result == "pending":
-            clauses.append("e.outcome IS NULL AND NOT EXISTS(SELECT 1 FROM processing_jobs jf WHERE jf.message_id=r.id AND jf.status='failed')")
-        elif result:
-            clauses.append("e.outcome=?")
+        if result:
+            clauses.append("m.result=?")
             params.append(result)
         if point:
-            clauses.append("(r.received_at<? OR (r.received_at=? AND r.id<?))")
+            clauses.append("(m.received_at<? OR (m.received_at=? AND m.id<?))")
             params.extend([point[0], point[0], point[1]])
         where = " WHERE " + " AND ".join(clauses) if clauses else ""
         rows = await database.fetch_all(
-            """SELECT r.id, r.account_id, r.source_type, r.peer_id, r.sender_id, r.sender_name, r.message_time,
-               r.received_at, r.text, r.expires_at,
-               COALESCE(s.user_alias, s.platform_name, s.peer_id) AS source_name,
-               COALESCE(e.outcome, CASE WHEN EXISTS(SELECT 1 FROM processing_jobs j WHERE j.message_id=r.id AND j.status='failed') THEN 'failed' ELSE 'pending' END) AS result
-               FROM raw_messages r
-               LEFT JOIN sources s ON s.id=r.source_id
-               LEFT JOIN evaluations e ON e.id=(SELECT e2.id FROM evaluations e2 WHERE e2.message_id=r.id ORDER BY e2.processed_at DESC LIMIT 1)"""
-            + where + " ORDER BY r.received_at DESC, r.id DESC LIMIT ?",
+            """WITH latest_evaluations AS (
+                 SELECT e.* FROM evaluations e
+                 WHERE e.id=(
+                   SELECT e2.id FROM evaluations e2
+                   WHERE e2.message_id=e.message_id AND e2.task_id=e.task_id
+                   ORDER BY e2.processed_at DESC, e2.revision DESC, e2.id DESC LIMIT 1
+                 )
+               ), evaluation_summary AS (
+                 SELECT message_id,
+                   SUM(CASE WHEN outcome='match' THEN 1 ELSE 0 END) AS match_count,
+                   SUM(CASE WHEN outcome='review' THEN 1 ELSE 0 END) AS review_count,
+                   SUM(CASE WHEN outcome='conflict' THEN 1 ELSE 0 END) AS conflict_count,
+                   SUM(CASE WHEN outcome='not_match' THEN 1 ELSE 0 END) AS not_match_count
+                 FROM latest_evaluations GROUP BY message_id
+               ), job_summary AS (
+                 SELECT message_id,
+                   SUM(CASE WHEN status IN ('pending','deferred','processing') THEN 1 ELSE 0 END) AS pending_count,
+                   SUM(CASE WHEN status='failed' THEN 1 ELSE 0 END) AS failed_count
+                 FROM processing_jobs WHERE message_id IS NOT NULL GROUP BY message_id
+               ), message_results AS (
+                 SELECT r.id, r.account_id, r.source_id, r.source_type, r.peer_id, r.sender_id, r.sender_name,
+                   r.message_time, r.received_at, r.text, r.expires_at,
+                   COALESCE(s.user_alias, s.platform_name, s.peer_id) AS source_name,
+                   COALESCE(e.match_count,0) AS match_count,
+                   COALESCE(e.review_count,0) AS review_count,
+                   COALESCE(e.conflict_count,0) AS conflict_count,
+                   COALESCE(e.not_match_count,0) AS not_match_count,
+                   COALESCE(j.pending_count,0) AS pending_count,
+                   COALESCE(j.failed_count,0) AS failed_count,
+                   CASE
+                     WHEN COALESCE(e.match_count,0)>0 THEN 'match'
+                     WHEN COALESCE(e.review_count,0)>0 THEN 'review'
+                     WHEN COALESCE(e.conflict_count,0)>0 THEN 'conflict'
+                     WHEN COALESCE(e.not_match_count,0)>0 THEN 'not_match'
+                     WHEN COALESCE(j.pending_count,0)>0 THEN 'pending'
+                     WHEN COALESCE(j.failed_count,0)>0 THEN 'failed'
+                     ELSE 'pending'
+                   END AS result
+                 FROM raw_messages r
+                 LEFT JOIN sources s ON s.id=r.source_id
+                 LEFT JOIN evaluation_summary e ON e.message_id=r.id
+                 LEFT JOIN job_summary j ON j.message_id=r.id
+               ) SELECT * FROM message_results m"""
+            + where + " ORDER BY m.received_at DESC, m.id DESC LIMIT ?",
             (*params, size + 1),
         )
         more, rows = len(rows) > size, rows[:size]
@@ -870,7 +902,17 @@ def install_api(
         if not row:
             raise _error(404, "message_expired_or_missing", "原文已过期或不存在")
         row["segments"] = _json(row.pop("segments_json"), [])
-        row["evaluations"] = await database.fetch_all("SELECT * FROM evaluations WHERE message_id=? ORDER BY processed_at DESC", (message_id,))
+        row["evaluations"] = await database.fetch_all(
+            """SELECT e.*, t.name AS task_name FROM evaluations e
+               JOIN tasks t ON t.id=e.task_id WHERE e.message_id=? AND e.id=(
+                 SELECT e2.id FROM evaluations e2
+                 WHERE e2.message_id=e.message_id AND e2.task_id=e.task_id
+                 ORDER BY e2.processed_at DESC, e2.revision DESC, e2.id DESC LIMIT 1
+               )
+               ORDER BY CASE e.outcome WHEN 'match' THEN 0 WHEN 'review' THEN 1 WHEN 'conflict' THEN 2 ELSE 3 END,
+                        t.name""",
+            (message_id,),
+        )
         row["leads"] = await database.fetch_all("SELECT * FROM leads WHERE message_id=? ORDER BY created_at DESC", (message_id,))
         return row
 
@@ -949,13 +991,15 @@ def install_api(
                 clauses.append(f"{field}=?")
                 params.append(value)
         if q:
-            clauses.append("(r.text LIKE ? OR r.sender_name LIKE ? OR t.name LIKE ?)")
-            params.extend([f"%{q}%"] * 3)
+            clauses.append("(r.text LIKE ? OR COALESCE(l.sender_name,r.sender_name) LIKE ? OR COALESCE(l.sender_id,r.sender_id) LIKE ? OR t.name LIKE ?)")
+            params.extend([f"%{q}%"] * 4)
         if point:
             clauses.append("(l.created_at<? OR (l.created_at=? AND l.id<?))")
             params.extend([point[0], point[0], point[1]])
         rows = await database.fetch_all(
-            """SELECT l.*, t.name AS task_name, r.sender_id, r.sender_name, r.message_time,
+            """SELECT l.*, t.name AS task_name,
+               COALESCE(l.sender_id,r.sender_id) AS contact_sender_id,
+               COALESCE(l.sender_name,r.sender_name) AS contact_sender_name, r.message_time,
                COALESCE(s.user_alias, s.platform_name, s.peer_id) AS source_name,
                s.source_type, s.peer_id
                FROM leads l JOIN tasks t ON t.id=l.task_id
@@ -966,6 +1010,8 @@ def install_api(
         )
         more, rows = len(rows) > size, rows[:size]
         for row in rows:
+            row["sender_id"] = row.pop("contact_sender_id")
+            row["sender_name"] = row.pop("contact_sender_name")
             row["extracted"] = _json(row.pop("extracted_json"), {})
             row["evidence"] = _json(row.pop("evidence_json"), {})
             row["comparisons"] = _json(row.pop("comparison_json"), [])
@@ -975,13 +1021,17 @@ def install_api(
     @router.get("/leads/{lead_id}")
     async def get_lead(lead_id: str, _session=Depends(require_session)):
         row = await database.fetch_one(
-            """SELECT l.*, t.name AS task_name, r.text AS raw_text, r.sender_id, r.sender_name,
+            """SELECT l.*, t.name AS task_name, r.text AS raw_text,
+               COALESCE(l.sender_id,r.sender_id) AS contact_sender_id,
+               COALESCE(l.sender_name,r.sender_name) AS contact_sender_name,
                r.message_time, r.account_id, r.source_type, r.peer_id
                FROM leads l JOIN tasks t ON t.id=l.task_id LEFT JOIN raw_messages r ON r.id=l.message_id WHERE l.id=?""",
             (lead_id,),
         )
         if not row:
             raise _error(404, "lead_not_found", "线索不存在")
+        row["sender_id"] = row.pop("contact_sender_id")
+        row["sender_name"] = row.pop("contact_sender_name")
         for source, target, default in (
             ("extracted_json", "extracted", {}), ("evidence_json", "evidence", {}),
             ("comparison_json", "comparisons", []), ("manual_overrides_json", "manual_overrides", {}),
@@ -1034,11 +1084,15 @@ def install_api(
         lead_id = str(uuid.uuid4())
         await database.execute(
             """INSERT INTO leads(id, task_id, message_id, item_key, revision, processor_version, direction,
-               extracted_json, evidence_json, comparison_json, outcome, reason, evidence_expires_at, created_at, updated_at)
-               VALUES (?, ?, ?, ?, ?, ?, 'unknown', '{}', ?, '[]', 'review', '人工加入', ?, ?, ?)
-               ON CONFLICT(task_id, message_id, item_key) DO UPDATE SET superseded_at=NULL, updated_at=excluded.updated_at""",
+               extracted_json, evidence_json, comparison_json, outcome, reason, sender_id, sender_name,
+               evidence_expires_at, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, 'unknown', '{}', ?, '[]', 'review', '人工加入', ?, ?, ?, ?, ?)
+               ON CONFLICT(task_id, message_id, item_key) DO UPDATE SET
+                 sender_id=excluded.sender_id, sender_name=excluded.sender_name,
+                 superseded_at=NULL, updated_at=excluded.updated_at""",
             (lead_id, task_id, message_id, key, task["current_revision"], PROCESSOR_VERSION,
              json.dumps({"text": message["text"], "manual": True}, ensure_ascii=False),
+             message["sender_id"], message["sender_name"],
              (datetime.now(timezone.utc) + timedelta(days=lead_days)).isoformat(timespec="seconds"), now, now),
         )
         row = await database.fetch_one("SELECT id FROM leads WHERE task_id=? AND message_id=? AND item_key=?", (task_id, message_id, key))

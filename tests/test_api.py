@@ -114,6 +114,52 @@ class ApiTests(unittest.TestCase):
         )
         self.assertEqual(stale.status_code, 409)
 
+    def test_message_summary_and_sender_qq(self):
+        self.authenticate()
+        asyncio.run(self.service.connect_account("10001", "测试账号"))
+        asyncio.run(self.service.refresh_sources("10001", [{"group_id": 20001, "group_name": "测试群"}]))
+        source = self.client.get("/api/sources").json()["items"][0]
+        source = self.client.patch(
+            f"/api/sources/{source['id']}", headers=self.write_headers,
+            json={"enabled": True, "version": source["version"]},
+        ).json()
+
+        for name, alias in (("目标任务", "ThinkBook"), ("无关任务", "Dell")):
+            response = self.client.post(
+                "/api/tasks", headers=self.write_headers,
+                json={"name": name, "conditions": {
+                    "direction": "sell", "product": name, "aliases": [alias], "alias_mode": "any",
+                    "specs": {}, "price": {}, "quantity": {}, "trade": {}, "source_ids": [source["id"]],
+                }},
+            )
+            self.assertEqual(response.status_code, 201, response.text)
+
+        saved = asyncio.run(self.service.ingest({
+            "platform": "qq", "account_id": "10001", "group_id": "20001", "native_message_id": "summary-1",
+            "sender_id": "30001", "sender_name": "测试发布者", "message_time": "2026-09-15T12:00:00+00:00",
+            "text": "ThinkBook 16G", "segments": [],
+        }))
+        self.assertEqual(saved["jobs"], 2)
+        for _ in range(2):
+            job = asyncio.run(self.service._claim_job())
+            self.assertIsNotNone(job)
+            asyncio.run(self.service._process_job(job))
+
+        message = self.client.get("/api/messages").json()["items"][0]
+        self.assertEqual(message["result"], "review")
+        self.assertEqual((message["review_count"], message["not_match_count"]), (1, 1))
+        self.assertEqual(self.client.get("/api/messages", params={"q": "30001"}).json()["items"][0]["id"], message["id"])
+        self.assertEqual(self.client.get("/api/messages", params={"result": "not_match"}).json()["items"], [])
+
+        detail = self.client.get(f"/api/messages/{message['id']}").json()
+        self.assertEqual({item["task_name"] for item in detail["evaluations"]}, {"目标任务", "无关任务"})
+        lead = self.client.get("/api/leads", params={"q": "3000"}).json()["items"][0]
+        self.assertEqual((lead["sender_id"], lead["sender_name"]), ("30001", "测试发布者"))
+
+        asyncio.run(self.db.execute("DELETE FROM raw_messages WHERE id=?", (message["id"],)))
+        retained = self.client.get("/api/leads", params={"q": "30001"}).json()["items"]
+        self.assertEqual((len(retained), retained[0]["sender_id"]), (1, "30001"))
+
     def test_template_versioning_and_onboarding_contract(self):
         self.authenticate()
         template = self.client.get("/api/templates").json()["items"][0]

@@ -315,7 +315,8 @@ class Workbench:
 
     async def _process_job(self, job: dict[str, Any]) -> None:
         row = await self.database.fetch_one(
-            """SELECT j.*, r.text, r.received_at, tr.conditions_json, tpl.fields_json,
+            """SELECT j.*, r.text, r.received_at, r.sender_id, r.sender_name,
+               tr.conditions_json, tpl.fields_json,
                t.status AS task_status, t.expires_at
                FROM processing_jobs j
                LEFT JOIN raw_messages r ON r.id=j.message_id
@@ -374,14 +375,15 @@ class Workbench:
                 connection.execute(
                     """INSERT INTO leads(
                          id, task_id, message_id, item_key, revision, processor_version, direction,
-                         extracted_json, evidence_json, comparison_json, outcome, reason,
+                         extracted_json, evidence_json, comparison_json, outcome, reason, sender_id, sender_name,
                          evidence_expires_at, created_at, updated_at
-                       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                        ON CONFLICT(task_id, message_id, item_key) DO UPDATE SET
                          revision=excluded.revision, processor_version=excluded.processor_version,
                          direction=excluded.direction, extracted_json=excluded.extracted_json,
                          evidence_json=excluded.evidence_json, comparison_json=excluded.comparison_json,
-                         outcome=excluded.outcome, reason=excluded.reason, superseded_at=NULL,
+                         outcome=excluded.outcome, reason=excluded.reason,
+                         sender_id=excluded.sender_id, sender_name=excluded.sender_name, superseded_at=NULL,
                          evidence_expires_at=excluded.evidence_expires_at, updated_at=excluded.updated_at,
                          version=leads.version+1""",
                     (
@@ -389,6 +391,7 @@ class Workbench:
                         item["direction"], json.dumps(item["extracted"], ensure_ascii=False),
                         json.dumps({"text": item["text"]}, ensure_ascii=False),
                         json.dumps(item["comparisons"], ensure_ascii=False), item["outcome"], item["reason"],
+                        row["sender_id"], row["sender_name"],
                         _days(lead_days), now, now,
                     ),
                 )

@@ -116,6 +116,7 @@ class ServiceTests(unittest.IsolatedAsyncioTestCase):
         lead = await self.db.fetch_one("SELECT * FROM leads")
         self.assertEqual(lead["manual_status"], "contacted")
         self.assertEqual(lead["note"], "已电话联系")
+        self.assertEqual((lead["sender_id"], lead["sender_name"]), ("30001", "测试发布者"))
         self.assertEqual(first["jobs"], 1)
 
     async def test_two_tasks_share_raw_message(self):
