@@ -48,6 +48,36 @@ class RuleTests(unittest.TestCase):
         self.assertFalse(is_candidate("戴尔台式机现货", CONDITIONS))
         self.assertEqual(evaluate("戴尔台式机现货", CONDITIONS), [])
 
+    def test_colloquial_demand_is_collected_for_sell_task(self):
+        conditions = {
+            "direction": "sell", "product": "来酷战7000", "aliases": ["来酷战7000", "战7000"],
+            "alias_mode": "any", "specs": {"cpu": "I7 14650HX", "gpu": "X5060", "memory_gb": 16, "storage_tb": 1},
+            "price": {}, "quantity": {}, "trade": {}, "source_ids": [1],
+        }
+        for text in ("谁有来酷战7000", "找一台战7000", "来个战7000", "有战7000的联系", "战7000什么价"):
+            with self.subTest(text=text):
+                result = evaluate(text, conditions)[0]
+                self.assertEqual((result["direction"], result["outcome"]), ("demand", "review"))
+        result = evaluate("来酷战7000 I7 14650HX X5060 16G 1T 什么价", conditions)[0]
+        self.assertEqual((result["direction"], result["outcome"]), ("demand", "match"))
+
+    def test_supply_questions_and_negations_are_distinguished(self):
+        conditions = {
+            "direction": "sell", "product": "战7000", "aliases": ["战7000"], "alias_mode": "any",
+            "specs": {}, "price": {}, "quantity": {}, "trade": {}, "source_ids": [1],
+        }
+        self.assertEqual(evaluate("战7000有货吗", conditions)[0]["direction"], "demand")
+        self.assertEqual(evaluate("我有战7000现货", conditions)[0]["direction"], "supply")
+        self.assertEqual(evaluate("战7000不要了", conditions), [])
+        self.assertEqual(evaluate("战7000没货，我也在找战7000", conditions)[0]["direction"], "demand")
+
+    def test_region_is_not_extracted_or_compared(self):
+        conditions = CONDITIONS | {"trade": {"region": "北京"}}
+        result = evaluate("现货 ThinkBook 32G 1TB，4280元，2台，发货上海", conditions)[0]
+        self.assertEqual(result["outcome"], "match")
+        self.assertNotIn("region", result["extracted"])
+        self.assertNotIn("region", {item["field"] for item in result["comparisons"]})
+
     def test_validation_rejects_missing_sources(self):
         with self.assertRaises(ValueError):
             validate_conditions(CONDITIONS | {"source_ids": []})

@@ -4,7 +4,7 @@ import hashlib
 import re
 from typing import Any
 
-PROCESSOR_VERSION = "supply-demand/1"
+PROCESSOR_VERSION = "supply-demand/2"
 
 FIELD_TYPES = {"text", "number", "select", "date", "boolean"}
 BUILT_IN_ROLES = {
@@ -28,15 +28,14 @@ DEFAULT_TEMPLATE_FIELDS = [
      "help": "采购时代表目标收货地，销售时代表可交付地。", "role": "region"},
 ]
 
-SUPPLY_WORDS = re.compile(r"(?:现货|到货|可出|出售|出一?批|供应|有货|清仓|转让)", re.I)
+SUPPLY_WORDS = re.compile(r"(?:现货(?!吗)|到货|可出(?!吗)|出售|出一?批|供应|有货(?!吗)|清仓|转让)", re.I)
 DEMAND_WORDS = re.compile(r"(?:求购|采购|收一?批|高价收|需求|寻货|要货)", re.I)
 PRICE = re.compile(r"(?:[¥￥]\s*(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)\s*(?:元|块)(?:/([\u4e00-\u9fa5A-Za-z]+))?)", re.I)
 QUANTITY = re.compile(r"(\d+(?:\.\d+)?)\s*(台|个|套|件|箱|块|张|条)")
 MEMORY = re.compile(r"(?:内存|RAM)?\s*(\d{1,3})\s*G(?:B)?(?:\s*(?:内存|RAM))?", re.I)
 STORAGE = re.compile(r"(?:硬盘|SSD|存储)?\s*(\d+(?:\.\d+)?)\s*(T|TB)(?:\s*(?:硬盘|SSD|存储))?", re.I)
 CPU = re.compile(r"\b(?:i[3579][- ]?\d{4,5}[A-Za-z]{0,2}|Ultra\s*[3579]\s*\d{3}[A-Za-z]{0,2}|R[3579][- ]?\d{4}[A-Za-z]{0,2}|Ryzen\s*[3579]\s*\d{4}[A-Za-z]{0,2})\b", re.I)
-GPU = re.compile(r"\b(?:RTX|GTX|RX)\s*\d{3,4}(?:\s*(?:Ti|SUPER))?\b", re.I)
-REGION = re.compile(r"(?:交付|发货|地区|位置)[:：\s]*([\u4e00-\u9fa5]{2,8})")
+GPU = re.compile(r"\b(?:RTX|GTX|RX|X)\s*\d{3,4}(?:\s*(?:Ti|SUPER))?\b", re.I)
 
 
 def normalize(value: str) -> str:
@@ -170,9 +169,47 @@ def is_candidate(text: str, conditions: dict[str, Any]) -> bool:
     return all(found) if conditions.get("alias_mode") == "all" else any(found)
 
 
-def _direction(text: str) -> str:
+def _direction(text: str, aliases: list[str]) -> str:
     supply = bool(SUPPLY_WORDS.search(text))
     demand = bool(DEMAND_WORDS.search(text))
+    value = normalize(text)
+    stock_negative = False
+    for alias in aliases:
+        item = re.escape(normalize(alias))
+        if not item or item not in value:
+            continue
+        terminal_patterns = (
+            rf"(?:不要|不收|不找|不用)(?:一|两|三|\d+)?(?:台|个|套|件)?(?:了)?{item}",
+            rf"{item}.{{0,20}}(?:不要了?|不收了?|不找了?|不用了?|已买到|买到了?|已找到|找到了?)",
+            rf"(?:已经|已)(?:买到|找到|收到)(?:一|两|三|\d+)?(?:台|个|套|件)?{item}",
+        )
+        if any(re.search(pattern, value) for pattern in terminal_patterns):
+            return "negative"
+        demand_patterns = (
+            rf"(?:谁有|哪位有|有没有){item}",
+            rf"(?:找|求购?|采购|收|想要|需要|寻)(?:一|两|三|\d+)?(?:台|个|套|件)?{item}",
+            rf"来(?:一|两|三|\d+)?(?:台|个|套|件)?{item}",
+            rf"有{item}吗",
+            rf"有{item}(?:的)?(?:联系(?:我)?|私我|报价)",
+            rf"{item}.{{0,40}}(?:有没有|有没|有吗|有货吗|有现货吗|现货吗|什么价|多少钱|报个价|价格多少|能出吗|可出吗)",
+            rf"(?:能出|可以出){item}(?:的)?(?:联系(?:我)?|私我|报价)",
+        )
+        supply_patterns = (
+            rf"(?:我有|手上有|手里有|现有){item}",
+            rf"(?:出|卖|出售|处理)(?:一|两|三|\d+)?(?:台|个|套|件)?{item}",
+            rf"{item}.{{0,40}}(?:现货(?!吗)|到货|有货(?!吗)|可出(?!吗)|出售|可发|在库)",
+            rf"(?:现货|到货|有货|可出|出售|供应){item}",
+        )
+        demand |= any(re.search(pattern, value) for pattern in demand_patterns)
+        supply |= any(re.search(pattern, value) for pattern in supply_patterns)
+        stock_negative |= bool(re.search(
+            rf"(?:{item}.{{0,20}}(?:没货|没有货|无货|不出|卖完|已出)|(?:没货|无货|不出){item})",
+            value,
+        ))
+    if stock_negative:
+        supply = False
+        if not demand:
+            return "negative"
     if supply == demand:
         return "unknown"
     return "supply" if supply else "demand"
@@ -183,7 +220,6 @@ def _extract(text: str) -> dict[str, Any]:
     quantity_match = QUANTITY.search(text)
     memory_match = MEMORY.search(text)
     storage_match = STORAGE.search(text)
-    region_match = REGION.search(text)
     cpu_match = CPU.search(text)
     gpu_match = GPU.search(text)
     price = None
@@ -214,7 +250,6 @@ def _extract(text: str) -> dict[str, Any]:
         "price": price,
         "quantity": quantity,
         "specs": specs,
-        "region": {"value": region_match.group(1), "evidence": region_match.group(0)} if region_match else None,
     }
 
 
@@ -262,11 +297,6 @@ def _compare(conditions: dict[str, Any], direction: str, extracted: dict[str, An
             value = f"{actual['value']}{actual['unit']}"
         comparisons.append({"field": "quantity", "state": state, "expected": str(quantity_condition["value"]), "actual": value})
 
-    region = (conditions.get("trade") or {}).get("region")
-    if region:
-        actual = extracted.get("region")
-        state = "unknown" if not actual else ("match" if normalize(region) in normalize(actual["value"]) else "conflict")
-        comparisons.append({"field": "region", "state": state, "expected": region, "actual": actual["value"] if actual else ""})
     return comparisons
 
 
@@ -300,7 +330,7 @@ def _legacy_from_values(conditions: dict[str, Any], fields: list[dict[str, Any]]
         "specs": {key: values.get(key) for key in ("cpu", "gpu", "memory_gb", "storage_tb") if key in matched_roles and values.get(key) not in (None, "")},
         "price": {"value": values["price"]} if "price" in matched_roles and values.get("price") not in (None, "") else {},
         "quantity": {"value": values["quantity"], "unit": values.get("quantity_unit", "台")} if "quantity" in matched_roles and values.get("quantity") not in (None, "") else {},
-        "trade": {"region": values["region"]} if "region" in matched_roles and values.get("region") else {},
+        "trade": {},
     }
 
 
@@ -328,11 +358,14 @@ def evaluate(text: str, conditions: dict[str, Any], fields: list[dict[str, Any]]
         items = candidate_lines or ([text.strip()] if is_candidate(text, conditions) else [])
         results = []
         for index, item in enumerate(items):
+            direction = _direction(item, conditions["aliases"])
+            if direction == "negative":
+                continue
             comparisons = _literal_comparisons(item, conditions, fields)
             outcome = "review" if any(entry["state"] == "unknown" for entry in comparisons) else "match"
             results.append({
                 "item_key": hashlib.sha256(f"{index}:{normalize(item)}".encode()).hexdigest()[:24],
-                "text": item, "direction": _direction(item), "extracted": {"values": conditions.get("values", {})},
+                "text": item, "direction": direction, "extracted": {"values": conditions.get("values", {})},
                 "comparisons": comparisons, "outcome": outcome,
                 "reason": "信息不完整，需要人工核对" if outcome == "review" else "已知条件均满足",
                 "ambiguous": False,
@@ -346,7 +379,9 @@ def evaluate(text: str, conditions: dict[str, Any], fields: list[dict[str, Any]]
     results = []
     for index, item in enumerate(items):
         ambiguous = len(PRICE.findall(item)) > 1
-        direction = _direction(item)
+        direction = _direction(item, conditions["aliases"])
+        if direction == "negative":
+            continue
         extracted = _extract(item)
         comparisons = _compare(conditions, direction, extracted)
         states = {entry["state"] for entry in comparisons}

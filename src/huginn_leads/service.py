@@ -11,7 +11,7 @@ from typing import Any
 
 from .config import Settings
 from .database import Database, utcnow
-from .rules import PROCESSOR_VERSION, evaluate
+from .rules import PROCESSOR_VERSION, evaluate, is_candidate
 
 
 def _uuid() -> str:
@@ -360,7 +360,11 @@ class Workbench:
                 "conflict" if any(item["outcome"] == "conflict" for item in results) else
                 "review" if any(item["outcome"] == "review" for item in results) else "match"
             )
-            reason = "关键词未命中" if not results else "；".join(dict.fromkeys(item["reason"] for item in results))
+            reason = (
+                "未发现可执行交易意图" if not results and is_candidate(row["text"], conditions)
+                else "关键词未命中" if not results
+                else "；".join(dict.fromkeys(item["reason"] for item in results))
+            )
             payload = json.dumps(results, ensure_ascii=False)
             connection.execute(
                 """INSERT INTO evaluations(id, message_id, task_id, revision, processor_version, outcome, reason, result_json, processed_at)
