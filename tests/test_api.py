@@ -232,10 +232,10 @@ class ApiTests(unittest.TestCase):
         external_path = self.settings.root / "other-app.db"
         connection = sqlite3.connect(external_path)
         try:
-            connection.execute("CREATE TABLE stock(code TEXT PRIMARY KEY,title TEXT NOT NULL,quantity INTEGER NOT NULL)")
+            connection.execute("CREATE TABLE stock(code TEXT PRIMARY KEY,title TEXT NOT NULL,short_title TEXT,quantity INTEGER NOT NULL)")
             connection.executemany(
-                "INSERT INTO stock VALUES (?,?,?)",
-                [("a-1", "物品甲", 3), ("b-1", "物品乙", 5)],
+                "INSERT INTO stock VALUES (?,?,?,?)",
+                [("a-1", "品牌物品甲", "物品甲", 3), ("b-1", "品牌物品乙", "物品乙", 5)],
             )
             connection.commit()
         finally:
@@ -244,13 +244,14 @@ class ApiTests(unittest.TestCase):
         payload = {
             "name": "其他系统库存",
             "database_path": str(external_path),
-            "query_text": "SELECT code,title,quantity FROM stock WHERE quantity>0",
+            "query_text": "SELECT code,title,short_title,quantity FROM stock WHERE quantity>0",
             "key_column": "code",
             "template_id": template["id"],
             "field_mapping": {"service": "title", "available_slots": "quantity"},
             "defaults": {},
             "name_fields": ["service"],
             "alias_fields": ["service"],
+            "weak_alias_fields": ["short_title"],
             "alias_mode": "any",
             "task_source_ids": [qq_source["id"]],
         }
@@ -260,6 +261,7 @@ class ApiTests(unittest.TestCase):
         preview = self.client.post(f"/api/external-sources/{source_id}/preview", headers=self.write_headers)
         self.assertEqual(preview.status_code, 200, preview.text)
         self.assertEqual((preview.json()["total"], preview.json()["new"]), (2, 2))
+        self.assertEqual(preview.json()["sample"][0]["weak_aliases"], ["物品甲"])
 
         imported = self.client.post(f"/api/external-sources/{source_id}/imports", headers=self.write_headers)
         self.assertEqual(imported.status_code, 200, imported.text)
@@ -273,8 +275,25 @@ class ApiTests(unittest.TestCase):
         records = self.client.get(f"/api/external-sources/{source_id}/records").json()["items"]
         self.assertTrue(all(record["task_id"] for record in records))
         tasks = self.client.get("/api/tasks").json()["items"]
-        self.assertEqual({task["name"] for task in tasks}, {"物品甲", "物品乙"})
+        self.assertEqual({task["name"] for task in tasks}, {"品牌物品甲", "品牌物品乙"})
         self.assertEqual({task["values"]["available_slots"] for task in tasks}, {3, 5})
+        task = next(item for item in tasks if item["name"] == "品牌物品甲")
+        detail = self.client.get(f"/api/tasks/{task['id']}").json()
+        self.assertEqual(detail["conditions"]["weak_aliases"], ["物品甲"])
+
+        connection = sqlite3.connect(external_path)
+        try:
+            connection.execute("UPDATE stock SET short_title='甲' WHERE code='a-1'")
+            connection.commit()
+        finally:
+            connection.close()
+        imported = self.client.post(f"/api/external-sources/{source_id}/imports", headers=self.write_headers)
+        self.assertEqual(imported.json()["tasks_updated"], 1)
+        detail = self.client.get(f"/api/tasks/{task['id']}").json()
+        self.assertEqual(detail["current_revision"], 2)
+        self.assertEqual(detail["conditions"]["weak_aliases"], ["甲"])
+        imported = self.client.post(f"/api/external-sources/{source_id}/imports", headers=self.write_headers)
+        self.assertEqual(imported.json()["tasks_updated"], 0)
 
         unsafe = {**payload, "name": "非法查询", "query_text": "DELETE FROM stock"}
         response = self.client.post("/api/external-sources", headers=self.write_headers, json=unsafe)

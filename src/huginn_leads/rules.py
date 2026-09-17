@@ -4,7 +4,7 @@ import hashlib
 import re
 from typing import Any
 
-PROCESSOR_VERSION = "supply-demand/2"
+PROCESSOR_VERSION = "supply-demand/3"
 
 FIELD_TYPES = {"text", "number", "select", "date", "boolean"}
 BUILT_IN_ROLES = {
@@ -123,6 +123,11 @@ def validate_field_values(raw_values: Any, fields: list[dict[str, Any]]) -> dict
 def validate_conditions(data: dict[str, Any], fields: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     if fields is not None:
         aliases = [str(value).strip() for value in data.get("aliases", []) if str(value).strip()]
+        strong = {normalize(value) for value in aliases}
+        weak_aliases = [
+            str(value).strip() for value in data.get("weak_aliases", [])
+            if str(value).strip() and normalize(str(value)) not in strong
+        ]
         alias_mode = data.get("alias_mode", "any")
         source_ids = data.get("source_ids", [])
         if not aliases:
@@ -134,12 +139,18 @@ def validate_conditions(data: dict[str, Any], fields: list[dict[str, Any]] | Non
         values = validate_field_values(data.get("values") or {}, fields)
         return {
             "aliases": list(dict.fromkeys(aliases)), "alias_mode": alias_mode,
+            "weak_aliases": list(dict.fromkeys(weak_aliases)),
             "source_ids": list(dict.fromkeys(source_ids)), "values": values,
         }
 
     direction = data.get("direction")
     product = str(data.get("product", "")).strip()
     aliases = [str(value).strip() for value in data.get("aliases", []) if str(value).strip()]
+    strong = {normalize(value) for value in aliases}
+    weak_aliases = [
+        str(value).strip() for value in data.get("weak_aliases", [])
+        if str(value).strip() and normalize(str(value)) not in strong
+    ]
     alias_mode = data.get("alias_mode", "any")
     source_ids = data.get("source_ids", [])
     if direction not in {"purchase", "sell"}:
@@ -157,16 +168,31 @@ def validate_conditions(data: dict[str, Any], fields: list[dict[str, Any]] | Non
         direction=direction,
         product=product,
         aliases=list(dict.fromkeys(aliases)),
+        weak_aliases=list(dict.fromkeys(weak_aliases)),
         alias_mode=alias_mode,
         source_ids=list(dict.fromkeys(source_ids)),
     )
     return cleaned
 
 
-def is_candidate(text: str, conditions: dict[str, Any]) -> bool:
+def _all_aliases(conditions: dict[str, Any]) -> list[str]:
+    return list(dict.fromkeys((conditions.get("aliases") or []) + (conditions.get("weak_aliases") or [])))
+
+
+def _trigger(text: str, conditions: dict[str, Any]) -> dict[str, str] | None:
     haystack = normalize(text)
-    found = [normalize(alias) in haystack for alias in conditions["aliases"]]
-    return all(found) if conditions.get("alias_mode") == "all" else any(found)
+    strong = [alias for alias in conditions["aliases"] if normalize(alias) in haystack]
+    strong_match = len(strong) == len(conditions["aliases"]) if conditions.get("alias_mode") == "all" else bool(strong)
+    if strong_match:
+        return {"kind": "strong", "alias": strong[0]}
+    weak = [alias for alias in conditions.get("weak_aliases") or [] if normalize(alias) in haystack]
+    if weak and _direction(text, _all_aliases(conditions)) in {"supply", "demand"}:
+        return {"kind": "weak", "alias": weak[0]}
+    return None
+
+
+def is_candidate(text: str, conditions: dict[str, Any]) -> bool:
+    return _trigger(text, conditions) is not None
 
 
 def _direction(text: str, aliases: list[str]) -> str:
@@ -326,6 +352,7 @@ def _legacy_from_values(conditions: dict[str, Any], fields: list[dict[str, Any]]
         "direction": values.get("direction", "purchase"),
         "product": values.get("product") or conditions["aliases"][0],
         "aliases": conditions["aliases"], "alias_mode": conditions.get("alias_mode", "any"),
+        "weak_aliases": conditions.get("weak_aliases") or [],
         "source_ids": conditions["source_ids"],
         "specs": {key: values.get(key) for key in ("cpu", "gpu", "memory_gb", "storage_tb") if key in matched_roles and values.get(key) not in (None, "")},
         "price": {"value": values["price"]} if "price" in matched_roles and values.get("price") not in (None, "") else {},
@@ -358,14 +385,16 @@ def evaluate(text: str, conditions: dict[str, Any], fields: list[dict[str, Any]]
         items = candidate_lines or ([text.strip()] if is_candidate(text, conditions) else [])
         results = []
         for index, item in enumerate(items):
-            direction = _direction(item, conditions["aliases"])
+            trigger = _trigger(item, conditions)
+            direction = _direction(item, _all_aliases(conditions))
             if direction == "negative":
                 continue
             comparisons = _literal_comparisons(item, conditions, fields)
             outcome = "review" if any(entry["state"] == "unknown" for entry in comparisons) else "match"
             results.append({
                 "item_key": hashlib.sha256(f"{index}:{normalize(item)}".encode()).hexdigest()[:24],
-                "text": item, "direction": direction, "extracted": {"values": conditions.get("values", {})},
+                "text": item, "direction": direction,
+                "extracted": {"values": conditions.get("values", {}), "trigger": trigger},
                 "comparisons": comparisons, "outcome": outcome,
                 "reason": "信息不完整，需要人工核对" if outcome == "review" else "已知条件均满足",
                 "ambiguous": False,
@@ -379,10 +408,12 @@ def evaluate(text: str, conditions: dict[str, Any], fields: list[dict[str, Any]]
     results = []
     for index, item in enumerate(items):
         ambiguous = len(PRICE.findall(item)) > 1
-        direction = _direction(item, conditions["aliases"])
+        trigger = _trigger(item, conditions)
+        direction = _direction(item, _all_aliases(conditions))
         if direction == "negative":
             continue
         extracted = _extract(item)
+        extracted["trigger"] = trigger
         comparisons = _compare(conditions, direction, extracted)
         states = {entry["state"] for entry in comparisons}
         outcome = "conflict" if "conflict" in states else ("review" if "unknown" in states or ambiguous else "match")

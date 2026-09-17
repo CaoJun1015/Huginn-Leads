@@ -50,7 +50,7 @@ class RuleTests(unittest.TestCase):
 
     def test_colloquial_demand_is_collected_for_sell_task(self):
         conditions = {
-            "direction": "sell", "product": "来酷战7000", "aliases": ["来酷战7000", "战7000"],
+            "direction": "sell", "product": "来酷战7000", "aliases": ["来酷战7000"], "weak_aliases": ["战7000"],
             "alias_mode": "any", "specs": {"cpu": "I7 14650HX", "gpu": "X5060", "memory_gb": 16, "storage_tb": 1},
             "price": {}, "quantity": {}, "trade": {}, "source_ids": [1],
         }
@@ -58,8 +58,20 @@ class RuleTests(unittest.TestCase):
             with self.subTest(text=text):
                 result = evaluate(text, conditions)[0]
                 self.assertEqual((result["direction"], result["outcome"]), ("demand", "review"))
+        self.assertEqual(evaluate("找一台战7000", conditions)[0]["extracted"]["trigger"]["kind"], "weak")
         result = evaluate("来酷战7000 I7 14650HX X5060 16G 1T 什么价", conditions)[0]
         self.assertEqual((result["direction"], result["outcome"]), ("demand", "match"))
+
+    def test_weak_alias_requires_trade_intent(self):
+        conditions = {
+            "direction": "sell", "product": "来酷战7000", "aliases": ["来酷战7000"], "weak_aliases": ["战7000"],
+            "alias_mode": "any", "specs": {}, "price": {}, "quantity": {}, "trade": {}, "source_ids": [1],
+        }
+        self.assertEqual(evaluate("来酷战7000", conditions)[0]["extracted"]["trigger"]["kind"], "strong")
+        self.assertEqual(evaluate("战7000", conditions), [])
+        self.assertEqual(evaluate("大战7000次", conditions), [])
+        self.assertEqual(evaluate("战7000不要了", conditions), [])
+        self.assertEqual(evaluate("我有战7000", conditions)[0]["outcome"], "conflict")
 
     def test_supply_questions_and_negations_are_distinguished(self):
         conditions = {

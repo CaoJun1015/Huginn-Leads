@@ -23,6 +23,8 @@ DIAOHUO_QUERY = """SELECT
   )) AS external_key,
   TRIM(p.series || ' ' || COALESCE(p.cpu,'') || ' ' || COALESCE(p.ram,'') || ' ' ||
        COALESCE(p.storage,'') || ' ' || COALESCE(p.gpu,'')) AS product,
+  CASE WHEN TRIM(p.series) LIKE '来酷%' AND LENGTH(TRIM(p.series)) > 2
+       THEN SUBSTR(TRIM(p.series), 3) END AS weak_alias,
   p.series AS series, p.cpu AS cpu, p.gpu AS gpu, p.ram AS ram, p.storage AS storage, p.screen AS screen,
   SUM(b.remaining) AS available_quantity
 FROM products p
@@ -47,6 +49,7 @@ def external_presets() -> list[dict[str, Any]]:
         "defaults": {"direction": "sell"},
         "name_fields": ["product"],
         "alias_fields": ["series"],
+        "weak_alias_fields": ["weak_alias"],
         "alias_mode": "any",
     }]
 
@@ -72,6 +75,7 @@ def source_view(row: dict[str, Any]) -> dict[str, Any]:
         ("defaults_json", "defaults", {}),
         ("name_fields_json", "name_fields", []),
         ("alias_fields_json", "alias_fields", []),
+        ("weak_alias_fields_json", "weak_alias_fields", []),
         ("task_source_ids_json", "task_source_ids", []),
     ):
         result[target] = _json(result.pop(source, None), default)
@@ -83,6 +87,7 @@ def validate_source_config(config: dict[str, Any], fields: list[dict[str, Any]])
     defaults = config.get("defaults") or {}
     name_fields = list(dict.fromkeys(config.get("name_fields") or []))
     alias_fields = list(dict.fromkeys(config.get("alias_fields") or []))
+    weak_alias_fields = list(dict.fromkeys(str(value).strip() for value in config.get("weak_alias_fields") or []))
     task_source_ids = list(dict.fromkeys(config.get("task_source_ids") or []))
     field_keys = {field["key"] for field in fields}
     if not isinstance(mapping, dict) or any(key not in field_keys or not str(value).strip() for key, value in mapping.items()):
@@ -94,6 +99,8 @@ def validate_source_config(config: dict[str, Any], fields: list[dict[str, Any]])
         raise ExternalSourceError("invalid_name_fields", "任务名称字段必须来自已映射字段或默认值")
     if not alias_fields or any(key not in available for key in alias_fields):
         raise ExternalSourceError("invalid_alias_fields", "触发关键词字段必须来自已映射字段或默认值")
+    if any(not value for value in weak_alias_fields):
+        raise ExternalSourceError("invalid_weak_alias_fields", "弱别名查询列名不能为空")
     if any(not isinstance(value, int) for value in task_source_ids):
         raise ExternalSourceError("invalid_task_sources", "任务来源格式无效")
     if config.get("alias_mode", "any") not in {"any", "all"}:
@@ -109,6 +116,7 @@ def validate_source_config(config: dict[str, Any], fields: list[dict[str, Any]])
         "defaults": validate_field_values(defaults, [field for field in fields if field["key"] in defaults]),
         "name_fields": name_fields,
         "alias_fields": alias_fields,
+        "weak_alias_fields": weak_alias_fields,
         "task_source_ids": task_source_ids,
         "alias_mode": config.get("alias_mode", "any"),
         "query_text": statement,
@@ -170,14 +178,27 @@ def _prepare_rows(source: dict[str, Any], fields: list[dict[str, Any]], rows: li
             aliases = list(dict.fromkeys(token for key in config["alias_fields"] for token in _tokens(values.get(key))))
             if not aliases:
                 raise ValueError("记录未生成任何触发关键词")
+            strong = {re.sub(r"\s+", "", alias).lower() for alias in aliases}
+            weak_aliases: list[str] = []
+            for column in config["weak_alias_fields"]:
+                if column not in row:
+                    raise ValueError(f"查询结果缺少弱别名列 {column}")
+                weak_aliases.extend(_tokens(row[column]))
+            weak_aliases = list(dict.fromkeys(
+                alias for alias in weak_aliases if re.sub(r"\s+", "", alias).lower() not in strong
+            ))
             display_name = " ".join(str(values.get(key, "")).strip() for key in config["name_fields"] if values.get(key) not in (None, ""))
             if not display_name:
                 raise ValueError("记录未生成任务名称")
-            content = json.dumps({"values": values, "aliases": aliases, "display_name": display_name}, ensure_ascii=False, sort_keys=True)
+            content = json.dumps(
+                {"values": values, "aliases": aliases, "weak_aliases": weak_aliases, "display_name": display_name},
+                ensure_ascii=False, sort_keys=True,
+            )
             prepared.append({
                 "external_key": external_key,
                 "display_name": display_name[:120],
                 "aliases": aliases,
+                "weak_aliases": weak_aliases,
                 "values": values,
                 "content_hash": hashlib.sha256(content.encode()).hexdigest(),
             })
@@ -239,19 +260,30 @@ class ExternalCatalog:
         }
 
     async def import_records(self, source_id: str) -> dict[str, Any]:
-        source, _, prepared = await self._read(source_id)
+        source, fields, prepared = await self._read(source_id)
         now = utcnow()
+        for item in prepared:
+            item["conditions"] = validate_conditions(
+                {
+                    "aliases": item["aliases"],
+                    "weak_aliases": item["weak_aliases"],
+                    "alias_mode": source["alias_mode"],
+                    "source_ids": source["task_source_ids"],
+                    "values": item["values"],
+                },
+                fields,
+            )
 
         def write(connection: sqlite3.Connection) -> dict[str, Any]:
             before = {
                 row["external_key"]: dict(row)
                 for row in connection.execute(
-                    "SELECT external_key,content_hash,active FROM external_records WHERE external_source_id=?",
+                    "SELECT external_key,content_hash,active,task_id FROM external_records WHERE external_source_id=?",
                     (source_id,),
                 )
             }
             incoming = {item["external_key"] for item in prepared}
-            created = changed = reactivated = 0
+            created = changed = reactivated = tasks_updated = 0
             for item in prepared:
                 old = before.get(item["external_key"])
                 created += old is None
@@ -260,11 +292,12 @@ class ExternalCatalog:
                 connection.execute(
                     """INSERT INTO external_records(
                          id,external_source_id,external_key,template_id,template_version,display_name,
-                         aliases_json,values_json,content_hash,active,first_imported_at,last_seen_at,updated_at
-                       ) VALUES (?,?,?,?,?,?,?,?,?,1,?,?,?)
+                         aliases_json,weak_aliases_json,values_json,content_hash,active,first_imported_at,last_seen_at,updated_at
+                       ) VALUES (?,?,?,?,?,?,?,?,?,?,1,?,?,?)
                        ON CONFLICT(external_source_id,external_key) DO UPDATE SET
                          template_id=excluded.template_id,template_version=excluded.template_version,
                          display_name=excluded.display_name,aliases_json=excluded.aliases_json,
+                         weak_aliases_json=excluded.weak_aliases_json,
                          values_json=excluded.values_json,content_hash=excluded.content_hash,
                          active=1,last_seen_at=excluded.last_seen_at,updated_at=excluded.updated_at,
                          version=external_records.version+1""",
@@ -272,9 +305,33 @@ class ExternalCatalog:
                         str(uuid.uuid4()), source_id, item["external_key"], source["template_id"],
                         source["template_version"], item["display_name"],
                         json.dumps(item["aliases"], ensure_ascii=False),
+                        json.dumps(item["weak_aliases"], ensure_ascii=False),
                         json.dumps(item["values"], ensure_ascii=False), item["content_hash"], now, now, now,
                     ),
                 )
+                if old and old["task_id"] and old["content_hash"] != item["content_hash"] and source["task_source_ids"]:
+                    task = connection.execute(
+                        "SELECT current_revision FROM tasks WHERE id=?", (old["task_id"],)
+                    ).fetchone()
+                    if task:
+                        revision = int(task["current_revision"]) + 1
+                        connection.execute(
+                            "INSERT INTO task_revisions(task_id,revision,template_version,conditions_json,created_at) VALUES (?,?,?,?,?)",
+                            (old["task_id"], revision, str(source["template_version"]), json.dumps(item["conditions"], ensure_ascii=False), now),
+                        )
+                        connection.executemany(
+                            "INSERT INTO task_revision_sources(task_id,revision,source_id) VALUES (?,?,?)",
+                            [(old["task_id"], revision, value) for value in source["task_source_ids"]],
+                        )
+                        connection.execute(
+                            "UPDATE tasks SET name=?,current_revision=?,updated_at=?,version=version+1 WHERE id=?",
+                            (item["display_name"], revision, now, old["task_id"]),
+                        )
+                        connection.execute(
+                            "INSERT INTO audit(occurred_at,object_type,object_id,action) VALUES (?,'task',?,'sync_external')",
+                            (now, old["task_id"]),
+                        )
+                        tasks_updated += 1
             missing = [key for key, value in before.items() if value["active"] and key not in incoming]
             if missing:
                 connection.executemany(
@@ -291,7 +348,7 @@ class ExternalCatalog:
             )
             return {
                 "total": len(prepared), "created": created, "changed": changed,
-                "reactivated": reactivated, "deactivated": len(missing),
+                "reactivated": reactivated, "deactivated": len(missing), "tasks_updated": tasks_updated,
             }
 
         return await self.database.write(write)
@@ -315,6 +372,7 @@ class ExternalCatalog:
             conditions = validate_conditions(
                 {
                     "aliases": _json(record["aliases_json"], []),
+                    "weak_aliases": _json(record["weak_aliases_json"], []),
                     "alias_mode": source["alias_mode"],
                     "source_ids": source_ids,
                     "values": _json(record["values_json"], {}),
@@ -366,5 +424,6 @@ class ExternalCatalog:
         )
         for row in rows:
             row["aliases"] = _json(row.pop("aliases_json"), [])
+            row["weak_aliases"] = _json(row.pop("weak_aliases_json"), [])
             row["values"] = _json(row.pop("values_json"), {})
         return rows

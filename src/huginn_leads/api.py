@@ -78,6 +78,7 @@ class ExternalSourceCreate(BaseModel):
     defaults: dict[str, Any] = Field(default_factory=dict)
     name_fields: list[str] = Field(default_factory=list)
     alias_fields: list[str] = Field(default_factory=list)
+    weak_alias_fields: list[str] = Field(default_factory=list)
     alias_mode: str = "any"
     task_source_ids: list[int] = Field(default_factory=list)
 
@@ -536,16 +537,17 @@ def install_api(
         await database.execute(
             """INSERT INTO external_sources(
                  id,name,database_path,query_text,key_column,template_id,template_version,
-                 field_mapping_json,defaults_json,name_fields_json,alias_fields_json,
+                 field_mapping_json,defaults_json,name_fields_json,alias_fields_json,weak_alias_fields_json,
                  alias_mode,task_source_ids_json,created_at,updated_at
-               ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+               ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 source_id, body.name.strip(), body.database_path.strip(), config["query_text"],
                 config["key_column"], body.template_id, template["current_version"],
                 json.dumps(config["field_mapping"], ensure_ascii=False),
                 json.dumps(config["defaults"], ensure_ascii=False),
                 json.dumps(config["name_fields"], ensure_ascii=False),
-                json.dumps(config["alias_fields"], ensure_ascii=False), config["alias_mode"],
+                json.dumps(config["alias_fields"], ensure_ascii=False),
+                json.dumps(config["weak_alias_fields"], ensure_ascii=False), config["alias_mode"],
                 json.dumps(config["task_source_ids"]), now, now,
             ),
         )
@@ -567,7 +569,7 @@ def install_api(
         changed = await database.execute(
             """UPDATE external_sources SET
                  name=?,database_path=?,query_text=?,key_column=?,template_id=?,template_version=?,
-                 field_mapping_json=?,defaults_json=?,name_fields_json=?,alias_fields_json=?,
+                 field_mapping_json=?,defaults_json=?,name_fields_json=?,alias_fields_json=?,weak_alias_fields_json=?,
                  alias_mode=?,task_source_ids_json=?,status='active',updated_at=?,version=version+1
                WHERE id=? AND version=?""",
             (
@@ -576,7 +578,8 @@ def install_api(
                 json.dumps(config["field_mapping"], ensure_ascii=False),
                 json.dumps(config["defaults"], ensure_ascii=False),
                 json.dumps(config["name_fields"], ensure_ascii=False),
-                json.dumps(config["alias_fields"], ensure_ascii=False), config["alias_mode"],
+                json.dumps(config["alias_fields"], ensure_ascii=False),
+                json.dumps(config["weak_alias_fields"], ensure_ascii=False), config["alias_mode"],
                 json.dumps(config["task_source_ids"]), utcnow(), source_id, body.version,
             ),
         )
