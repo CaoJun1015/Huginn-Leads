@@ -119,6 +119,8 @@ small { color: var(--muted); }
 .tabs { display: flex; gap: 4px; margin-bottom: 14px; border-bottom: 1px solid var(--line); }
 .tabs button { margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; }
 .tabs button.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 700; }
+.section-tabs { margin: -8px 0 24px; }
+.section-tabs button { padding-inline: 16px; }
 .inline-check { display: flex; align-items: center; gap: 7px; font-weight: 500; }
 .inline-check input { width: auto; min-height: auto; }
 .table-card { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
@@ -262,6 +264,8 @@ blockquote { margin: 0; padding: 13px 15px; border-left: 3px solid var(--blue); 
   .account-card { grid-template-columns: auto 1fr auto; }
   .account-card > button { grid-column: 2 / -1; }
   .topbar > div span { display: none; }
+  .section-tabs { overflow-x: auto; }
+  .section-tabs button { flex: none; }
   .status-link { display: none; }
   .comparisons > div { grid-template-columns: 1fr auto; }
   .comparisons > div strong { grid-column: 1 / -1; grid-row: 2; }
