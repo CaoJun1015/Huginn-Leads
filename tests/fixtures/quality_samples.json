@@ -1,0 +1,5075 @@
+[
+  {
+    "id": "S001",
+    "origin": "synthetic",
+    "split": "development",
+    "category": "口语求购",
+    "conditions": {
+      "direction": "sell",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "谁有ThinkBook",
+    "expected_direction": "demand",
+    "candidate": true,
+    "items": [
+      {
+        "text": "谁有ThinkBook",
+        "direction": "demand",
+        "outcome": "match",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确找货或询价；本任务只比较供求方向。"
+  },
+  {
+    "id": "S002",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "口语求购",
+    "conditions": {
+      "direction": "sell",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "哪位有ThinkBook",
+    "expected_direction": "demand",
+    "candidate": true,
+    "items": [
+      {
+        "text": "哪位有ThinkBook",
+        "direction": "demand",
+        "outcome": "match",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确找货或询价；本任务只比较供求方向。"
+  },
+  {
+    "id": "S003",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "口语求购",
+    "conditions": {
+      "direction": "sell",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "有没有ThinkBook",
+    "expected_direction": "demand",
+    "candidate": true,
+    "items": [
+      {
+        "text": "有没有ThinkBook",
+        "direction": "demand",
+        "outcome": "match",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确找货或询价；本任务只比较供求方向。"
+  },
+  {
+    "id": "S004",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "口语求购",
+    "conditions": {
+      "direction": "sell",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "想要两台ThinkBook",
+    "expected_direction": "demand",
+    "candidate": true,
+    "items": [
+      {
+        "text": "想要两台ThinkBook",
+        "direction": "demand",
+        "outcome": "match",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确找货或询价；本任务只比较供求方向。"
+  },
+  {
+    "id": "S005",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "口语求购",
+    "conditions": {
+      "direction": "sell",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "需要ThinkBook",
+    "expected_direction": "demand",
+    "candidate": true,
+    "items": [
+      {
+        "text": "需要ThinkBook",
+        "direction": "demand",
+        "outcome": "match",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确找货或询价；本任务只比较供求方向。"
+  },
+  {
+    "id": "S006",
+    "origin": "synthetic",
+    "split": "development",
+    "category": "口语求购",
+    "conditions": {
+      "direction": "sell",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "寻ThinkBook",
+    "expected_direction": "demand",
+    "candidate": true,
+    "items": [
+      {
+        "text": "寻ThinkBook",
+        "direction": "demand",
+        "outcome": "match",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确找货或询价；本任务只比较供求方向。"
+  },
+  {
+    "id": "S007",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "口语求购",
+    "conditions": {
+      "direction": "sell",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "ThinkBook报个价",
+    "expected_direction": "demand",
+    "candidate": true,
+    "items": [
+      {
+        "text": "ThinkBook报个价",
+        "direction": "demand",
+        "outcome": "match",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确找货或询价；本任务只比较供求方向。"
+  },
+  {
+    "id": "S008",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "口语求购",
+    "conditions": {
+      "direction": "sell",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "ThinkBook能出吗",
+    "expected_direction": "demand",
+    "candidate": true,
+    "items": [
+      {
+        "text": "ThinkBook能出吗",
+        "direction": "demand",
+        "outcome": "match",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确找货或询价；本任务只比较供求方向。"
+  },
+  {
+    "id": "S009",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "口语求购",
+    "conditions": {
+      "direction": "sell",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "能出ThinkBook的私我",
+    "expected_direction": "demand",
+    "candidate": true,
+    "items": [
+      {
+        "text": "能出ThinkBook的私我",
+        "direction": "demand",
+        "outcome": "match",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确找货或询价；本任务只比较供求方向。"
+  },
+  {
+    "id": "S010",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "口语求购",
+    "conditions": {
+      "direction": "sell",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "有没有人能帮忙调一台ThinkBook",
+    "expected_direction": "demand",
+    "candidate": true,
+    "items": [
+      {
+        "text": "有没有人能帮忙调一台ThinkBook",
+        "direction": "demand",
+        "outcome": "match",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确找货或询价；本任务只比较供求方向。"
+  },
+  {
+    "id": "S011",
+    "origin": "synthetic",
+    "split": "development",
+    "category": "供货",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "手上有ThinkBook",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "手上有ThinkBook",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确现货或可交付；不臆造配置。"
+  },
+  {
+    "id": "S012",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "供货",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "手里有ThinkBook",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "手里有ThinkBook",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确现货或可交付；不臆造配置。"
+  },
+  {
+    "id": "S013",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "供货",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现有ThinkBook",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现有ThinkBook",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确现货或可交付；不臆造配置。"
+  },
+  {
+    "id": "S014",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "供货",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "出售ThinkBook",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "出售ThinkBook",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确现货或可交付；不臆造配置。"
+  },
+  {
+    "id": "S015",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "供货",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "出一批ThinkBook",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "出一批ThinkBook",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确现货或可交付；不臆造配置。"
+  },
+  {
+    "id": "S016",
+    "origin": "synthetic",
+    "split": "development",
+    "category": "供货",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "ThinkBook在库",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "ThinkBook在库",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确现货或可交付；不臆造配置。"
+  },
+  {
+    "id": "S017",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "供货",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "ThinkBook可发",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "ThinkBook可发",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确现货或可交付；不臆造配置。"
+  },
+  {
+    "id": "S018",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "供货",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "供应ThinkBook",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "供应ThinkBook",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确现货或可交付；不臆造配置。"
+  },
+  {
+    "id": "S019",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "供货",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "ThinkBook到货",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "ThinkBook到货",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确现货或可交付；不臆造配置。"
+  },
+  {
+    "id": "S020",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "供货",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "ThinkBook可以安排发货",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "ThinkBook可以安排发货",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确现货或可交付；不臆造配置。"
+  },
+  {
+    "id": "S021",
+    "origin": "synthetic",
+    "split": "development",
+    "category": "否定求购",
+    "conditions": {
+      "direction": "sell",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "不要ThinkBook",
+    "expected_direction": "negative",
+    "candidate": false,
+    "items": [],
+    "reason": "需求明确终止，不应产生线索。"
+  },
+  {
+    "id": "S022",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "否定求购",
+    "conditions": {
+      "direction": "sell",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "不收ThinkBook",
+    "expected_direction": "negative",
+    "candidate": false,
+    "items": [],
+    "reason": "需求明确终止，不应产生线索。"
+  },
+  {
+    "id": "S023",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "否定求购",
+    "conditions": {
+      "direction": "sell",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "不找ThinkBook",
+    "expected_direction": "negative",
+    "candidate": false,
+    "items": [],
+    "reason": "需求明确终止，不应产生线索。"
+  },
+  {
+    "id": "S024",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "否定求购",
+    "conditions": {
+      "direction": "sell",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "不用ThinkBook",
+    "expected_direction": "negative",
+    "candidate": false,
+    "items": [],
+    "reason": "需求明确终止，不应产生线索。"
+  },
+  {
+    "id": "S025",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "否定求购",
+    "conditions": {
+      "direction": "sell",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "ThinkBook不要了",
+    "expected_direction": "negative",
+    "candidate": false,
+    "items": [],
+    "reason": "需求明确终止，不应产生线索。"
+  },
+  {
+    "id": "S026",
+    "origin": "synthetic",
+    "split": "development",
+    "category": "否定求购",
+    "conditions": {
+      "direction": "sell",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "ThinkBook不收了",
+    "expected_direction": "negative",
+    "candidate": false,
+    "items": [],
+    "reason": "需求明确终止，不应产生线索。"
+  },
+  {
+    "id": "S027",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "否定求购",
+    "conditions": {
+      "direction": "sell",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "ThinkBook已买到",
+    "expected_direction": "negative",
+    "candidate": false,
+    "items": [],
+    "reason": "需求明确终止，不应产生线索。"
+  },
+  {
+    "id": "S028",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "否定求购",
+    "conditions": {
+      "direction": "sell",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "已经找到ThinkBook",
+    "expected_direction": "negative",
+    "candidate": false,
+    "items": [],
+    "reason": "需求明确终止，不应产生线索。"
+  },
+  {
+    "id": "S029",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "否定求购",
+    "conditions": {
+      "direction": "sell",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "已收到ThinkBook",
+    "expected_direction": "negative",
+    "candidate": false,
+    "items": [],
+    "reason": "需求明确终止，不应产生线索。"
+  },
+  {
+    "id": "S030",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "否定求购",
+    "conditions": {
+      "direction": "sell",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "ThinkBook找到了",
+    "expected_direction": "negative",
+    "candidate": false,
+    "items": [],
+    "reason": "需求明确终止，不应产生线索。"
+  },
+  {
+    "id": "S031",
+    "origin": "synthetic",
+    "split": "development",
+    "category": "库存终止",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "ThinkBook卖完",
+    "expected_direction": "negative",
+    "candidate": false,
+    "items": [],
+    "reason": "库存终止应排除；同时明确找货则保留求购并对采购任务判冲突。"
+  },
+  {
+    "id": "S032",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "库存终止",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "ThinkBook已出",
+    "expected_direction": "negative",
+    "candidate": false,
+    "items": [],
+    "reason": "库存终止应排除；同时明确找货则保留求购并对采购任务判冲突。"
+  },
+  {
+    "id": "S033",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "库存终止",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "ThinkBook无货",
+    "expected_direction": "negative",
+    "candidate": false,
+    "items": [],
+    "reason": "库存终止应排除；同时明确找货则保留求购并对采购任务判冲突。"
+  },
+  {
+    "id": "S034",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "库存终止",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "无货ThinkBook",
+    "expected_direction": "negative",
+    "candidate": false,
+    "items": [],
+    "reason": "库存终止应排除；同时明确找货则保留求购并对采购任务判冲突。"
+  },
+  {
+    "id": "S035",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "库存终止",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "ThinkBook不出",
+    "expected_direction": "negative",
+    "candidate": false,
+    "items": [],
+    "reason": "库存终止应排除；同时明确找货则保留求购并对采购任务判冲突。"
+  },
+  {
+    "id": "S036",
+    "origin": "synthetic",
+    "split": "development",
+    "category": "库存终止",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "ThinkBook没有货",
+    "expected_direction": "negative",
+    "candidate": false,
+    "items": [],
+    "reason": "库存终止应排除；同时明确找货则保留求购并对采购任务判冲突。"
+  },
+  {
+    "id": "S037",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "库存终止",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "ThinkBook已售罄",
+    "expected_direction": "negative",
+    "candidate": false,
+    "items": [],
+    "reason": "库存终止应排除；同时明确找货则保留求购并对采购任务判冲突。"
+  },
+  {
+    "id": "S038",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "库存终止",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "ThinkBook已成交",
+    "expected_direction": "negative",
+    "candidate": false,
+    "items": [],
+    "reason": "库存终止应排除；同时明确找货则保留求购并对采购任务判冲突。"
+  },
+  {
+    "id": "S039",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "库存终止",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "ThinkBook现货已全部卖完",
+    "expected_direction": "negative",
+    "candidate": false,
+    "items": [],
+    "reason": "库存终止应排除；同时明确找货则保留求购并对采购任务判冲突。"
+  },
+  {
+    "id": "S040",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "库存终止",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "ThinkBook没货，我也在找ThinkBook",
+    "expected_direction": "demand",
+    "candidate": true,
+    "items": [
+      {
+        "text": "ThinkBook没货，我也在找ThinkBook",
+        "direction": "demand",
+        "outcome": "conflict",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "库存终止应排除；同时明确找货则保留求购并对采购任务判冲突。"
+  },
+  {
+    "id": "S041",
+    "origin": "synthetic",
+    "split": "development",
+    "category": "强弱别名",
+    "conditions": {
+      "direction": "sell",
+      "product": "测试办公本",
+      "aliases": [
+        "来酷战7000"
+      ],
+      "weak_aliases": [
+        "战7000"
+      ],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "来酷战7000",
+    "expected_direction": "unknown",
+    "candidate": true,
+    "items": [
+      {
+        "text": "来酷战7000",
+        "direction": "unknown",
+        "outcome": "review",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "强词满足组合规则；弱词须有有效供求；无指定词不纳入候选。"
+  },
+  {
+    "id": "S042",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "强弱别名",
+    "conditions": {
+      "direction": "sell",
+      "product": "测试办公本",
+      "aliases": [
+        "来酷战7000"
+      ],
+      "weak_aliases": [
+        "战7000"
+      ],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "战7000",
+    "expected_direction": "unknown",
+    "candidate": false,
+    "items": [],
+    "reason": "强词满足组合规则；弱词须有有效供求；无指定词不纳入候选。"
+  },
+  {
+    "id": "S043",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "强弱别名",
+    "conditions": {
+      "direction": "sell",
+      "product": "测试办公本",
+      "aliases": [
+        "来酷战7000"
+      ],
+      "weak_aliases": [
+        "战7000"
+      ],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "大战7000次",
+    "expected_direction": "unknown",
+    "candidate": false,
+    "items": [],
+    "reason": "强词满足组合规则；弱词须有有效供求；无指定词不纳入候选。"
+  },
+  {
+    "id": "S044",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "强弱别名",
+    "conditions": {
+      "direction": "sell",
+      "product": "测试办公本",
+      "aliases": [
+        "来酷战7000"
+      ],
+      "weak_aliases": [
+        "战7000"
+      ],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "找战7000",
+    "expected_direction": "demand",
+    "candidate": true,
+    "items": [
+      {
+        "text": "找战7000",
+        "direction": "demand",
+        "outcome": "match",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "强词满足组合规则；弱词须有有效供求；无指定词不纳入候选。"
+  },
+  {
+    "id": "S045",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "强弱别名",
+    "conditions": {
+      "direction": "sell",
+      "product": "测试办公本",
+      "aliases": [
+        "来酷战7000"
+      ],
+      "weak_aliases": [
+        "战7000"
+      ],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "战7000有现货吗",
+    "expected_direction": "demand",
+    "candidate": true,
+    "items": [
+      {
+        "text": "战7000有现货吗",
+        "direction": "demand",
+        "outcome": "match",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "强词满足组合规则；弱词须有有效供求；无指定词不纳入候选。"
+  },
+  {
+    "id": "S046",
+    "origin": "synthetic",
+    "split": "development",
+    "category": "强弱别名",
+    "conditions": {
+      "direction": "sell",
+      "product": "测试办公本",
+      "aliases": [
+        "来酷战7000"
+      ],
+      "weak_aliases": [
+        "战7000"
+      ],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "我有战7000",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "我有战7000",
+        "direction": "supply",
+        "outcome": "conflict",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "强词满足组合规则；弱词须有有效供求；无指定词不纳入候选。"
+  },
+  {
+    "id": "S047",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "强弱别名",
+    "conditions": {
+      "direction": "sell",
+      "product": "测试办公本",
+      "aliases": [
+        "来酷战7000"
+      ],
+      "weak_aliases": [
+        "战7000"
+      ],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "战7000已售罄",
+    "expected_direction": "negative",
+    "candidate": false,
+    "items": [],
+    "reason": "强词满足组合规则；弱词须有有效供求；无指定词不纳入候选。"
+  },
+  {
+    "id": "S048",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "强弱别名",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook",
+        "锐龙"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "all",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook锐龙",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook锐龙",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "强词满足组合规则；弱词须有有效供求；无指定词不纳入候选。"
+  },
+  {
+    "id": "S049",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "强弱别名",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook",
+        "锐龙"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "all",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook酷睿",
+    "expected_direction": "supply",
+    "candidate": false,
+    "items": [],
+    "reason": "强词满足组合规则；弱词须有有效供求；无指定词不纳入候选。"
+  },
+  {
+    "id": "S050",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "强弱别名",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "戴尔办公本可出",
+    "expected_direction": "supply",
+    "candidate": false,
+    "items": [],
+    "reason": "强词满足组合规则；弱词须有有效供求；无指定词不纳入候选。"
+  },
+  {
+    "id": "S051",
+    "origin": "synthetic",
+    "split": "development",
+    "category": "内存",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook RAM 16GB",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook RAM 16GB",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {
+          "memory_gb": 16
+        },
+        "unknown_fields": [
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确RAM标签或约定G简写才赋值；冲突/可选容量未知；TB内存应换算GB。"
+  },
+  {
+    "id": "S052",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "内存",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 8GB内存",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 8GB内存",
+        "direction": "supply",
+        "outcome": "conflict",
+        "known_fields": {
+          "memory_gb": 8
+        },
+        "unknown_fields": [
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确RAM标签或约定G简写才赋值；冲突/可选容量未知；TB内存应换算GB。"
+  },
+  {
+    "id": "S053",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "内存",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 内存32G",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 内存32G",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {
+          "memory_gb": 32
+        },
+        "unknown_fields": [
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确RAM标签或约定G简写才赋值；冲突/可选容量未知；TB内存应换算GB。"
+  },
+  {
+    "id": "S054",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "内存",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 16 GB RAM",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 16 GB RAM",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {
+          "memory_gb": 16
+        },
+        "unknown_fields": [
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确RAM标签或约定G简写才赋值；冲突/可选容量未知；TB内存应换算GB。"
+  },
+  {
+    "id": "S055",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "内存",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 内存8GB或16GB可选",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 内存8GB或16GB可选",
+        "direction": "supply",
+        "outcome": "review",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确RAM标签或约定G简写才赋值；冲突/可选容量未知；TB内存应换算GB。"
+  },
+  {
+    "id": "S056",
+    "origin": "synthetic",
+    "split": "development",
+    "category": "内存",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 内存8GB RAM32GB",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 内存8GB RAM32GB",
+        "direction": "supply",
+        "outcome": "review",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确RAM标签或约定G简写才赋值；冲突/可选容量未知；TB内存应换算GB。"
+  },
+  {
+    "id": "S057",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "内存",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 16G",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 16G",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {
+          "memory_gb": 16
+        },
+        "unknown_fields": [
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确RAM标签或约定G简写才赋值；冲突/可选容量未知；TB内存应换算GB。"
+  },
+  {
+    "id": "S058",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "内存",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 32GB",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 32GB",
+        "direction": "supply",
+        "outcome": "review",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确RAM标签或约定G简写才赋值；冲突/可选容量未知；TB内存应换算GB。"
+  },
+  {
+    "id": "S059",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "内存",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 内存16GB（重复标注RAM16GB）",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 内存16GB（重复标注RAM16GB）",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {
+          "memory_gb": 16
+        },
+        "unknown_fields": [
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确RAM标签或约定G简写才赋值；冲突/可选容量未知；TB内存应换算GB。"
+  },
+  {
+    "id": "S060",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "内存",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 内存1TB",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 内存1TB",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {
+          "memory_gb": 1024
+        },
+        "unknown_fields": [
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "明确RAM标签或约定G简写才赋值；冲突/可选容量未知；TB内存应换算GB。"
+  },
+  {
+    "id": "S061",
+    "origin": "synthetic",
+    "split": "development",
+    "category": "存储",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "storage_tb": 1
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook SSD 1024GB",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook SSD 1024GB",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {
+          "storage_tb": 1
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "SSD/硬盘/存储标签按1024GB=1TB；无标签GB和冲突容量未知。"
+  },
+  {
+    "id": "S062",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "存储",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "storage_tb": 1
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 512GB硬盘",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 512GB硬盘",
+        "direction": "supply",
+        "outcome": "conflict",
+        "known_fields": {
+          "storage_tb": 0.5
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "SSD/硬盘/存储标签按1024GB=1TB；无标签GB和冲突容量未知。"
+  },
+  {
+    "id": "S063",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "存储",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "storage_tb": 1
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 存储2TB",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 存储2TB",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {
+          "storage_tb": 2
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "SSD/硬盘/存储标签按1024GB=1TB；无标签GB和冲突容量未知。"
+  },
+  {
+    "id": "S064",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "存储",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "storage_tb": 1
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 1T",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 1T",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {
+          "storage_tb": 1
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "SSD/硬盘/存储标签按1024GB=1TB；无标签GB和冲突容量未知。"
+  },
+  {
+    "id": "S065",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "存储",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "storage_tb": 1
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook SSD256GB",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook SSD256GB",
+        "direction": "supply",
+        "outcome": "conflict",
+        "known_fields": {
+          "storage_tb": 0.25
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "SSD/硬盘/存储标签按1024GB=1TB；无标签GB和冲突容量未知。"
+  },
+  {
+    "id": "S066",
+    "origin": "synthetic",
+    "split": "development",
+    "category": "存储",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "storage_tb": 1
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 2TB SSD",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 2TB SSD",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {
+          "storage_tb": 2
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "SSD/硬盘/存储标签按1024GB=1TB；无标签GB和冲突容量未知。"
+  },
+  {
+    "id": "S067",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "存储",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "storage_tb": 1
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 硬盘1TB SSD2TB",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 硬盘1TB SSD2TB",
+        "direction": "supply",
+        "outcome": "review",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "SSD/硬盘/存储标签按1024GB=1TB；无标签GB和冲突容量未知。"
+  },
+  {
+    "id": "S068",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "存储",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "storage_tb": 1
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 1024GB",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 1024GB",
+        "direction": "supply",
+        "outcome": "review",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "SSD/硬盘/存储标签按1024GB=1TB；无标签GB和冲突容量未知。"
+  },
+  {
+    "id": "S069",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "存储",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "storage_tb": 1
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook SSD 1.5TB",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook SSD 1.5TB",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {
+          "storage_tb": 1.5
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "SSD/硬盘/存储标签按1024GB=1TB；无标签GB和冲突容量未知。"
+  },
+  {
+    "id": "S070",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "存储",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "storage_tb": 1
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 内存16GB 存储512GB",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 内存16GB 存储512GB",
+        "direction": "supply",
+        "outcome": "conflict",
+        "known_fields": {
+          "memory_gb": 16,
+          "storage_tb": 0.5
+        },
+        "unknown_fields": [
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "SSD/硬盘/存储标签按1024GB=1TB；无标签GB和冲突容量未知。"
+  },
+  {
+    "id": "S071",
+    "origin": "synthetic",
+    "split": "development",
+    "category": "显存隔离",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook VRAM8GB",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook VRAM8GB",
+        "direction": "supply",
+        "outcome": "review",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "显存不得充当内存；明确硬盘和RAM独立取值。"
+  },
+  {
+    "id": "S072",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "显存隔离",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 显存16G",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 显存16G",
+        "direction": "supply",
+        "outcome": "review",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "显存不得充当内存；明确硬盘和RAM独立取值。"
+  },
+  {
+    "id": "S073",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "显存隔离",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 12GB显存",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 12GB显存",
+        "direction": "supply",
+        "outcome": "review",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "显存不得充当内存；明确硬盘和RAM独立取值。"
+  },
+  {
+    "id": "S074",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "显存隔离",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 8G VRAM 内存16G",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 8G VRAM 内存16G",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {
+          "memory_gb": 16
+        },
+        "unknown_fields": [
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "显存不得充当内存；明确硬盘和RAM独立取值。"
+  },
+  {
+    "id": "S075",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "显存隔离",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook RTX 4060 显存8GB SSD1TB",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook RTX 4060 显存8GB SSD1TB",
+        "direction": "supply",
+        "outcome": "review",
+        "known_fields": {
+          "gpu": "RTX 4060",
+          "storage_tb": 1
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "cpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "显存不得充当内存；明确硬盘和RAM独立取值。"
+  },
+  {
+    "id": "S076",
+    "origin": "synthetic",
+    "split": "development",
+    "category": "显存隔离",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook RAM8GB VRAM16GB",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook RAM8GB VRAM16GB",
+        "direction": "supply",
+        "outcome": "conflict",
+        "known_fields": {
+          "memory_gb": 8
+        },
+        "unknown_fields": [
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "显存不得充当内存；明确硬盘和RAM独立取值。"
+  },
+  {
+    "id": "S077",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "显存隔离",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook VRAM8GB RAM32GB SSD2TB",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook VRAM8GB RAM32GB SSD2TB",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {
+          "memory_gb": 32,
+          "storage_tb": 2
+        },
+        "unknown_fields": [
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "显存不得充当内存；明确硬盘和RAM独立取值。"
+  },
+  {
+    "id": "S078",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "显存隔离",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 16GB VRAM 512GB SSD",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 16GB VRAM 512GB SSD",
+        "direction": "supply",
+        "outcome": "review",
+        "known_fields": {
+          "storage_tb": 0.5
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "显存不得充当内存；明确硬盘和RAM独立取值。"
+  },
+  {
+    "id": "S079",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "显存隔离",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook RAM16GB 显存8GB 1T",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook RAM16GB 显存8GB 1T",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {
+          "memory_gb": 16,
+          "storage_tb": 1
+        },
+        "unknown_fields": [
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "显存不得充当内存；明确硬盘和RAM独立取值。"
+  },
+  {
+    "id": "S080",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "显存隔离",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 显存8GB，内存待确认",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 显存8GB，内存待确认",
+        "direction": "supply",
+        "outcome": "review",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "显存不得充当内存；明确硬盘和RAM独立取值。"
+  },
+  {
+    "id": "S081",
+    "origin": "synthetic",
+    "split": "development",
+    "category": "价格",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {
+        "value": 4500
+      },
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook ￥4300",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook ￥4300",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {
+          "price": 4300
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "采购比较上限、销售比较下限；多价格缺明确选择规则时价格未知并待核对；k缩写暂不解析。"
+  },
+  {
+    "id": "S082",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "价格",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {
+        "value": 4500
+      },
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 4500元",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 4500元",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {
+          "price": 4500
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "采购比较上限、销售比较下限；多价格缺明确选择规则时价格未知并待核对；k缩写暂不解析。"
+  },
+  {
+    "id": "S083",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "价格",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {
+        "value": 4500
+      },
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 4600元",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 4600元",
+        "direction": "supply",
+        "outcome": "conflict",
+        "known_fields": {
+          "price": 4600
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "采购比较上限、销售比较下限；多价格缺明确选择规则时价格未知并待核对；k缩写暂不解析。"
+  },
+  {
+    "id": "S084",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "价格",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {
+        "value": 4500
+      },
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 4499.50元/台",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 4499.50元/台",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {
+          "price": 4499.5
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "采购比较上限、销售比较下限；多价格缺明确选择规则时价格未知并待核对；k缩写暂不解析。"
+  },
+  {
+    "id": "S085",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "价格",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {
+        "value": 4500
+      },
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 4.3k",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 4.3k",
+        "direction": "supply",
+        "outcome": "review",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "采购比较上限、销售比较下限；多价格缺明确选择规则时价格未知并待核对；k缩写暂不解析。"
+  },
+  {
+    "id": "S086",
+    "origin": "synthetic",
+    "split": "development",
+    "category": "价格",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {
+        "value": 4500
+      },
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 4200元或4600元",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 4200元或4600元",
+        "direction": "supply",
+        "outcome": "review",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "采购比较上限、销售比较下限；多价格缺明确选择规则时价格未知并待核对；k缩写暂不解析。"
+  },
+  {
+    "id": "S087",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "价格",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {
+        "value": 4500
+      },
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 单台4200元，两台共8200元",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 单台4200元，两台共8200元",
+        "direction": "supply",
+        "outcome": "review",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "采购比较上限、销售比较下限；多价格缺明确选择规则时价格未知并待核对；k缩写暂不解析。"
+  },
+  {
+    "id": "S088",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "价格",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {
+        "value": 4500
+      },
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 4600元，优惠后4400元",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 4600元，优惠后4400元",
+        "direction": "supply",
+        "outcome": "review",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "采购比较上限、销售比较下限；多价格缺明确选择规则时价格未知并待核对；k缩写暂不解析。"
+  },
+  {
+    "id": "S089",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "价格",
+    "conditions": {
+      "direction": "sell",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {
+        "value": 4500
+      },
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "采购ThinkBook 预算5000元",
+    "expected_direction": "demand",
+    "candidate": true,
+    "items": [
+      {
+        "text": "采购ThinkBook 预算5000元",
+        "direction": "demand",
+        "outcome": "match",
+        "known_fields": {
+          "price": 5000
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "采购比较上限、销售比较下限；多价格缺明确选择规则时价格未知并待核对；k缩写暂不解析。"
+  },
+  {
+    "id": "S090",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "价格",
+    "conditions": {
+      "direction": "sell",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {
+        "value": 4500
+      },
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "求购ThinkBook 预算4000元",
+    "expected_direction": "demand",
+    "candidate": true,
+    "items": [
+      {
+        "text": "求购ThinkBook 预算4000元",
+        "direction": "demand",
+        "outcome": "conflict",
+        "known_fields": {
+          "price": 4000
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "采购比较上限、销售比较下限；多价格缺明确选择规则时价格未知并待核对；k缩写暂不解析。"
+  },
+  {
+    "id": "S091",
+    "origin": "synthetic",
+    "split": "development",
+    "category": "数量",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {
+        "value": 2,
+        "unit": "台"
+      },
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 2台",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 2台",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {
+          "quantity": 2,
+          "quantity_unit": "台"
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price"
+        ]
+      }
+    ],
+    "reason": "数量带明确台/套等单位；多数量无选择依据；块作为价格不能当库存数量。"
+  },
+  {
+    "id": "S092",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "数量",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {
+        "value": 2,
+        "unit": "台"
+      },
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 1台",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 1台",
+        "direction": "supply",
+        "outcome": "conflict",
+        "known_fields": {
+          "quantity": 1,
+          "quantity_unit": "台"
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price"
+        ]
+      }
+    ],
+    "reason": "数量带明确台/套等单位；多数量无选择依据；块作为价格不能当库存数量。"
+  },
+  {
+    "id": "S093",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "数量",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {
+        "value": 2,
+        "unit": "台"
+      },
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 5套",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 5套",
+        "direction": "supply",
+        "outcome": "conflict",
+        "known_fields": {
+          "quantity": 5,
+          "quantity_unit": "套"
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price"
+        ]
+      }
+    ],
+    "reason": "数量带明确台/套等单位；多数量无选择依据；块作为价格不能当库存数量。"
+  },
+  {
+    "id": "S094",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "数量",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {
+        "value": 2,
+        "unit": "台"
+      },
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 两台",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 两台",
+        "direction": "supply",
+        "outcome": "review",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "数量带明确台/套等单位；多数量无选择依据；块作为价格不能当库存数量。"
+  },
+  {
+    "id": "S095",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "数量",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {
+        "value": 2,
+        "unit": "台"
+      },
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 若干台",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 若干台",
+        "direction": "supply",
+        "outcome": "review",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "数量带明确台/套等单位；多数量无选择依据；块作为价格不能当库存数量。"
+  },
+  {
+    "id": "S096",
+    "origin": "synthetic",
+    "split": "development",
+    "category": "数量",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {
+        "value": 2,
+        "unit": "台"
+      },
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 0台",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 0台",
+        "direction": "supply",
+        "outcome": "conflict",
+        "known_fields": {
+          "quantity": 0,
+          "quantity_unit": "台"
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price"
+        ]
+      }
+    ],
+    "reason": "数量带明确台/套等单位；多数量无选择依据；块作为价格不能当库存数量。"
+  },
+  {
+    "id": "S097",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "数量",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {
+        "value": 2,
+        "unit": "台"
+      },
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 12台",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 12台",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {
+          "quantity": 12,
+          "quantity_unit": "台"
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price"
+        ]
+      }
+    ],
+    "reason": "数量带明确台/套等单位；多数量无选择依据；块作为价格不能当库存数量。"
+  },
+  {
+    "id": "S098",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "数量",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {
+        "value": 2,
+        "unit": "台"
+      },
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 3件",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 3件",
+        "direction": "supply",
+        "outcome": "conflict",
+        "known_fields": {
+          "quantity": 3,
+          "quantity_unit": "件"
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price"
+        ]
+      }
+    ],
+    "reason": "数量带明确台/套等单位；多数量无选择依据；块作为价格不能当库存数量。"
+  },
+  {
+    "id": "S099",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "数量",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {
+        "value": 2,
+        "unit": "台"
+      },
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 2台或5台",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 2台或5台",
+        "direction": "supply",
+        "outcome": "review",
+        "known_fields": {
+          "quantity_unit": "台"
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity"
+        ]
+      }
+    ],
+    "reason": "数量带明确台/套等单位；多数量无选择依据；块作为价格不能当库存数量。"
+  },
+  {
+    "id": "S100",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "数量",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {},
+      "price": {},
+      "quantity": {
+        "value": 2,
+        "unit": "台"
+      },
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 4200块，数量另问",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 4200块，数量另问",
+        "direction": "supply",
+        "outcome": "review",
+        "known_fields": {
+          "price": 4200
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "数量带明确台/套等单位；多数量无选择依据；块作为价格不能当库存数量。"
+  },
+  {
+    "id": "S101",
+    "origin": "synthetic",
+    "split": "development",
+    "category": "多商品与跨行",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 内存16GB\n现货ThinkBook 内存8GB",
+    "expected_direction": "per_item",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 内存16GB",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {
+          "memory_gb": 16
+        },
+        "unknown_fields": [
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      },
+      {
+        "text": "现货ThinkBook 内存8GB",
+        "direction": "supply",
+        "outcome": "conflict",
+        "known_fields": {
+          "memory_gb": 8
+        },
+        "unknown_fields": [
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "按有触发词的独立行判断，不从无商品行或另一商品继承字段；同一行冲突容量保持未知。"
+  },
+  {
+    "id": "S102",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "多商品与跨行",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook\n内存16GB",
+    "expected_direction": "per_item",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook",
+        "direction": "supply",
+        "outcome": "review",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "按有触发词的独立行判断，不从无商品行或另一商品继承字段；同一行冲突容量保持未知。"
+  },
+  {
+    "id": "S103",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "多商品与跨行",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "ThinkBook 内存16GB\n现货",
+    "expected_direction": "per_item",
+    "candidate": true,
+    "items": [
+      {
+        "text": "ThinkBook 内存16GB",
+        "direction": "unknown",
+        "outcome": "review",
+        "known_fields": {
+          "memory_gb": 16
+        },
+        "unknown_fields": [
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "按有触发词的独立行判断，不从无商品行或另一商品继承字段；同一行冲突容量保持未知。"
+  },
+  {
+    "id": "S104",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "多商品与跨行",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 内存32GB\n戴尔 内存8GB",
+    "expected_direction": "per_item",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 内存32GB",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {
+          "memory_gb": 32
+        },
+        "unknown_fields": [
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "按有触发词的独立行判断，不从无商品行或另一商品继承字段；同一行冲突容量保持未知。"
+  },
+  {
+    "id": "S105",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "多商品与跨行",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 内存16GB\nThinkBook卖完",
+    "expected_direction": "per_item",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 内存16GB",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {
+          "memory_gb": 16
+        },
+        "unknown_fields": [
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "按有触发词的独立行判断，不从无商品行或另一商品继承字段；同一行冲突容量保持未知。"
+  },
+  {
+    "id": "S106",
+    "origin": "synthetic",
+    "split": "development",
+    "category": "多商品与跨行",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "求购ThinkBook 内存16GB\n现货ThinkBook 内存32GB",
+    "expected_direction": "per_item",
+    "candidate": true,
+    "items": [
+      {
+        "text": "求购ThinkBook 内存16GB",
+        "direction": "demand",
+        "outcome": "conflict",
+        "known_fields": {
+          "memory_gb": 16
+        },
+        "unknown_fields": [
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      },
+      {
+        "text": "现货ThinkBook 内存32GB",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {
+          "memory_gb": 32
+        },
+        "unknown_fields": [
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "按有触发词的独立行判断，不从无商品行或另一商品继承字段；同一行冲突容量保持未知。"
+  },
+  {
+    "id": "S107",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "多商品与跨行",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook SSD512GB\n现货ThinkBook RAM16GB",
+    "expected_direction": "per_item",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook SSD512GB",
+        "direction": "supply",
+        "outcome": "review",
+        "known_fields": {
+          "storage_tb": 0.5
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      },
+      {
+        "text": "现货ThinkBook RAM16GB",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {
+          "memory_gb": 16
+        },
+        "unknown_fields": [
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "按有触发词的独立行判断，不从无商品行或另一商品继承字段；同一行冲突容量保持未知。"
+  },
+  {
+    "id": "S108",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "多商品与跨行",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "ThinkBook\nThinkBook 内存16GB",
+    "expected_direction": "per_item",
+    "candidate": true,
+    "items": [
+      {
+        "text": "ThinkBook",
+        "direction": "unknown",
+        "outcome": "review",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      },
+      {
+        "text": "ThinkBook 内存16GB",
+        "direction": "unknown",
+        "outcome": "review",
+        "known_fields": {
+          "memory_gb": 16
+        },
+        "unknown_fields": [
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "按有触发词的独立行判断，不从无商品行或另一商品继承字段；同一行冲突容量保持未知。"
+  },
+  {
+    "id": "S109",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "多商品与跨行",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook A内存8GB；ThinkBook B内存32GB",
+    "expected_direction": "per_item",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook A内存8GB；ThinkBook B内存32GB",
+        "direction": "supply",
+        "outcome": "review",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "按有触发词的独立行判断，不从无商品行或另一商品继承字段；同一行冲突容量保持未知。"
+  },
+  {
+    "id": "S110",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "多商品与跨行",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 内存16GB\n戴尔 4600元\nThinkBook 内存32GB",
+    "expected_direction": "per_item",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 内存16GB",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {
+          "memory_gb": 16
+        },
+        "unknown_fields": [
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      },
+      {
+        "text": "ThinkBook 内存32GB",
+        "direction": "unknown",
+        "outcome": "review",
+        "known_fields": {
+          "memory_gb": 32
+        },
+        "unknown_fields": [
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "按有触发词的独立行判断，不从无商品行或另一商品继承字段；同一行冲突容量保持未知。"
+  },
+  {
+    "id": "S111",
+    "origin": "synthetic",
+    "split": "development",
+    "category": "型号与地区",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "cpu": "i7 14650HX"
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook i7 14650HX",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook i7 14650HX",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {
+          "cpu": "i7 14650HX"
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "型号需确切满足；空格/连字符是同型号写法，Ti是不同型号；地区仅记录不比较。"
+  },
+  {
+    "id": "S112",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "型号与地区",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "cpu": "i7 14650HX"
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook I7-14650HX",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook I7-14650HX",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {
+          "cpu": "I7-14650HX"
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "型号需确切满足；空格/连字符是同型号写法，Ti是不同型号；地区仅记录不比较。"
+  },
+  {
+    "id": "S113",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "型号与地区",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "cpu": "i7 14650HX"
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook i5 13500H",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook i5 13500H",
+        "direction": "supply",
+        "outcome": "conflict",
+        "known_fields": {
+          "cpu": "i5 13500H"
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "型号需确切满足；空格/连字符是同型号写法，Ti是不同型号；地区仅记录不比较。"
+  },
+  {
+    "id": "S114",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "型号与地区",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "cpu": "i7 14650HX"
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook CPU待定",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook CPU待定",
+        "direction": "supply",
+        "outcome": "review",
+        "known_fields": {},
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "型号需确切满足；空格/连字符是同型号写法，Ti是不同型号；地区仅记录不比较。"
+  },
+  {
+    "id": "S115",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "型号与地区",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "gpu": "RTX 4060"
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook RTX4060",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook RTX4060",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {
+          "gpu": "RTX4060"
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "型号需确切满足；空格/连字符是同型号写法，Ti是不同型号；地区仅记录不比较。"
+  },
+  {
+    "id": "S116",
+    "origin": "synthetic",
+    "split": "development",
+    "category": "型号与地区",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "gpu": "RTX 4060"
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook RTX 4070",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook RTX 4070",
+        "direction": "supply",
+        "outcome": "conflict",
+        "known_fields": {
+          "gpu": "RTX 4070"
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "型号需确切满足；空格/连字符是同型号写法，Ti是不同型号；地区仅记录不比较。"
+  },
+  {
+    "id": "S117",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "型号与地区",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "gpu": "RTX 4060"
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook RTX 4060 Ti",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook RTX 4060 Ti",
+        "direction": "supply",
+        "outcome": "conflict",
+        "known_fields": {
+          "gpu": "RTX 4060 Ti"
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "型号需确切满足；空格/连字符是同型号写法，Ti是不同型号；地区仅记录不比较。"
+  },
+  {
+    "id": "S118",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "型号与地区",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "gpu": "RTX 4060"
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook GTX 1650",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook GTX 1650",
+        "direction": "supply",
+        "outcome": "conflict",
+        "known_fields": {
+          "gpu": "GTX 1650"
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "型号需确切满足；空格/连字符是同型号写法，Ti是不同型号；地区仅记录不比较。"
+  },
+  {
+    "id": "S119",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "型号与地区",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "gpu": "RTX 4060"
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "求购ThinkBook RX 7600",
+    "expected_direction": "demand",
+    "candidate": true,
+    "items": [
+      {
+        "text": "求购ThinkBook RX 7600",
+        "direction": "demand",
+        "outcome": "conflict",
+        "known_fields": {
+          "gpu": "RX 7600"
+        },
+        "unknown_fields": [
+          "memory_gb",
+          "storage_tb",
+          "cpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "型号需确切满足；空格/连字符是同型号写法，Ti是不同型号；地区仅记录不比较。"
+  },
+  {
+    "id": "S120",
+    "origin": "synthetic",
+    "split": "acceptance",
+    "category": "型号与地区",
+    "conditions": {
+      "direction": "purchase",
+      "product": "测试办公本",
+      "aliases": [
+        "ThinkBook"
+      ],
+      "weak_aliases": [],
+      "alias_mode": "any",
+      "specs": {
+        "memory_gb": 16
+      },
+      "price": {},
+      "quantity": {},
+      "trade": {},
+      "source_ids": [
+        1
+      ]
+    },
+    "text": "现货ThinkBook 内存16GB 发货上海",
+    "expected_direction": "supply",
+    "candidate": true,
+    "items": [
+      {
+        "text": "现货ThinkBook 内存16GB 发货上海",
+        "direction": "supply",
+        "outcome": "match",
+        "known_fields": {
+          "memory_gb": 16
+        },
+        "unknown_fields": [
+          "storage_tb",
+          "cpu",
+          "gpu",
+          "price",
+          "quantity",
+          "quantity_unit"
+        ]
+      }
+    ],
+    "reason": "型号需确切满足；空格/连字符是同型号写法，Ti是不同型号；地区仅记录不比较。"
+  }
+]

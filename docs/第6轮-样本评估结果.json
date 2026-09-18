@@ -1,0 +1,738 @@
+{
+  "processor_version": "supply-demand/4",
+  "dataset_sha256": "3543e4bc52b0a67ae816e1740dea5c1494e2cf2190034c56f805365657c4dc8c",
+  "categories": {
+    "口语求购": 10,
+    "供货": 10,
+    "否定求购": 10,
+    "库存终止": 10,
+    "强弱别名": 10,
+    "内存": 10,
+    "存储": 10,
+    "显存隔离": 10,
+    "价格": 10,
+    "数量": 10,
+    "多商品与跨行": 10,
+    "型号与地区": 10
+  },
+  "groups": {
+    "synthetic/all": {
+      "samples": 120,
+      "candidate_recall": {
+        "numerator": 96,
+        "denominator": 96,
+        "percent": 100.0
+      },
+      "lead_recall": {
+        "numerator": 101,
+        "denominator": 101,
+        "percent": 100.0
+      },
+      "direction_accuracy": {
+        "numerator": 98,
+        "denominator": 101,
+        "percent": 97.03
+      },
+      "known_field_accuracy": {
+        "numerator": 65,
+        "denominator": 66,
+        "percent": 98.48
+      },
+      "unknown_field_safety": {
+        "numerator": 634,
+        "denominator": 641,
+        "percent": 98.91
+      },
+      "lead_false_discovery": {
+        "numerator": 2,
+        "denominator": 103,
+        "percent": 1.94
+      },
+      "match_false_discovery": {
+        "numerator": 2,
+        "denominator": 50,
+        "percent": 4.0
+      },
+      "review_ratio": {
+        "numerator": 29,
+        "denominator": 103,
+        "percent": 28.16
+      },
+      "exact_samples": {
+        "numerator": 106,
+        "denominator": 120,
+        "percent": 88.33
+      },
+      "failures": [
+        {
+          "id": "S009",
+          "category": "口语求购",
+          "errors": [
+            "direction unknown != demand",
+            "outcome review != match"
+          ]
+        },
+        {
+          "id": "S010",
+          "category": "口语求购",
+          "errors": [
+            "direction unknown != demand",
+            "outcome review != match"
+          ]
+        },
+        {
+          "id": "S020",
+          "category": "供货",
+          "errors": [
+            "direction unknown != supply",
+            "outcome review != match"
+          ]
+        },
+        {
+          "id": "S037",
+          "category": "库存终止",
+          "errors": [
+            "1 unexpected lead(s)"
+          ]
+        },
+        {
+          "id": "S038",
+          "category": "库存终止",
+          "errors": [
+            "1 unexpected lead(s)"
+          ]
+        },
+        {
+          "id": "S055",
+          "category": "内存",
+          "errors": [
+            "outcome conflict != review",
+            "unknown memory_gb fabricated as 8"
+          ]
+        },
+        {
+          "id": "S060",
+          "category": "内存",
+          "errors": [
+            "outcome conflict != match",
+            "field memory_gb: 1 != 1024"
+          ]
+        },
+        {
+          "id": "S086",
+          "category": "价格",
+          "errors": [
+            "unknown price fabricated as 4200.0"
+          ]
+        },
+        {
+          "id": "S087",
+          "category": "价格",
+          "errors": [
+            "unknown price fabricated as 4200.0"
+          ]
+        },
+        {
+          "id": "S088",
+          "category": "价格",
+          "errors": [
+            "outcome conflict != review",
+            "unknown price fabricated as 4600.0"
+          ]
+        },
+        {
+          "id": "S099",
+          "category": "数量",
+          "errors": [
+            "outcome match != review",
+            "unknown quantity fabricated as 2.0"
+          ]
+        },
+        {
+          "id": "S100",
+          "category": "数量",
+          "errors": [
+            "outcome conflict != review",
+            "unknown quantity fabricated as 4200.0",
+            "unknown quantity_unit fabricated as '块'"
+          ]
+        },
+        {
+          "id": "S112",
+          "category": "型号与地区",
+          "errors": [
+            "outcome conflict != match"
+          ]
+        },
+        {
+          "id": "S117",
+          "category": "型号与地区",
+          "errors": [
+            "outcome match != conflict"
+          ]
+        }
+      ]
+    },
+    "synthetic/development": {
+      "samples": 24,
+      "candidate_recall": {
+        "numerator": 20,
+        "denominator": 20,
+        "percent": 100.0
+      },
+      "lead_recall": {
+        "numerator": 22,
+        "denominator": 22,
+        "percent": 100.0
+      },
+      "direction_accuracy": {
+        "numerator": 22,
+        "denominator": 22,
+        "percent": 100.0
+      },
+      "known_field_accuracy": {
+        "numerator": 15,
+        "denominator": 15,
+        "percent": 100.0
+      },
+      "unknown_field_safety": {
+        "numerator": 138,
+        "denominator": 139,
+        "percent": 99.28
+      },
+      "lead_false_discovery": {
+        "numerator": 0,
+        "denominator": 22,
+        "percent": 0.0
+      },
+      "match_false_discovery": {
+        "numerator": 0,
+        "denominator": 12,
+        "percent": 0.0
+      },
+      "review_ratio": {
+        "numerator": 4,
+        "denominator": 22,
+        "percent": 18.18
+      },
+      "exact_samples": {
+        "numerator": 23,
+        "denominator": 24,
+        "percent": 95.83
+      },
+      "failures": [
+        {
+          "id": "S086",
+          "category": "价格",
+          "errors": [
+            "unknown price fabricated as 4200.0"
+          ]
+        }
+      ]
+    },
+    "synthetic/acceptance": {
+      "samples": 96,
+      "candidate_recall": {
+        "numerator": 76,
+        "denominator": 76,
+        "percent": 100.0
+      },
+      "lead_recall": {
+        "numerator": 79,
+        "denominator": 79,
+        "percent": 100.0
+      },
+      "direction_accuracy": {
+        "numerator": 76,
+        "denominator": 79,
+        "percent": 96.2
+      },
+      "known_field_accuracy": {
+        "numerator": 50,
+        "denominator": 51,
+        "percent": 98.04
+      },
+      "unknown_field_safety": {
+        "numerator": 496,
+        "denominator": 502,
+        "percent": 98.8
+      },
+      "lead_false_discovery": {
+        "numerator": 2,
+        "denominator": 81,
+        "percent": 2.47
+      },
+      "match_false_discovery": {
+        "numerator": 2,
+        "denominator": 38,
+        "percent": 5.26
+      },
+      "review_ratio": {
+        "numerator": 25,
+        "denominator": 81,
+        "percent": 30.86
+      },
+      "exact_samples": {
+        "numerator": 83,
+        "denominator": 96,
+        "percent": 86.46
+      },
+      "failures": [
+        {
+          "id": "S009",
+          "category": "口语求购",
+          "errors": [
+            "direction unknown != demand",
+            "outcome review != match"
+          ]
+        },
+        {
+          "id": "S010",
+          "category": "口语求购",
+          "errors": [
+            "direction unknown != demand",
+            "outcome review != match"
+          ]
+        },
+        {
+          "id": "S020",
+          "category": "供货",
+          "errors": [
+            "direction unknown != supply",
+            "outcome review != match"
+          ]
+        },
+        {
+          "id": "S037",
+          "category": "库存终止",
+          "errors": [
+            "1 unexpected lead(s)"
+          ]
+        },
+        {
+          "id": "S038",
+          "category": "库存终止",
+          "errors": [
+            "1 unexpected lead(s)"
+          ]
+        },
+        {
+          "id": "S055",
+          "category": "内存",
+          "errors": [
+            "outcome conflict != review",
+            "unknown memory_gb fabricated as 8"
+          ]
+        },
+        {
+          "id": "S060",
+          "category": "内存",
+          "errors": [
+            "outcome conflict != match",
+            "field memory_gb: 1 != 1024"
+          ]
+        },
+        {
+          "id": "S087",
+          "category": "价格",
+          "errors": [
+            "unknown price fabricated as 4200.0"
+          ]
+        },
+        {
+          "id": "S088",
+          "category": "价格",
+          "errors": [
+            "outcome conflict != review",
+            "unknown price fabricated as 4600.0"
+          ]
+        },
+        {
+          "id": "S099",
+          "category": "数量",
+          "errors": [
+            "outcome match != review",
+            "unknown quantity fabricated as 2.0"
+          ]
+        },
+        {
+          "id": "S100",
+          "category": "数量",
+          "errors": [
+            "outcome conflict != review",
+            "unknown quantity fabricated as 4200.0",
+            "unknown quantity_unit fabricated as '块'"
+          ]
+        },
+        {
+          "id": "S112",
+          "category": "型号与地区",
+          "errors": [
+            "outcome conflict != match"
+          ]
+        },
+        {
+          "id": "S117",
+          "category": "型号与地区",
+          "errors": [
+            "outcome match != conflict"
+          ]
+        }
+      ]
+    },
+    "real_desensitized/all": {
+      "samples": 0,
+      "candidate_recall": {
+        "numerator": 0,
+        "denominator": 0,
+        "percent": null
+      },
+      "lead_recall": {
+        "numerator": 0,
+        "denominator": 0,
+        "percent": null
+      },
+      "direction_accuracy": {
+        "numerator": 0,
+        "denominator": 0,
+        "percent": null
+      },
+      "known_field_accuracy": {
+        "numerator": 0,
+        "denominator": 0,
+        "percent": null
+      },
+      "unknown_field_safety": {
+        "numerator": 0,
+        "denominator": 0,
+        "percent": null
+      },
+      "lead_false_discovery": {
+        "numerator": 0,
+        "denominator": 0,
+        "percent": null
+      },
+      "match_false_discovery": {
+        "numerator": 0,
+        "denominator": 0,
+        "percent": null
+      },
+      "review_ratio": {
+        "numerator": 0,
+        "denominator": 0,
+        "percent": null
+      },
+      "exact_samples": {
+        "numerator": 0,
+        "denominator": 0,
+        "percent": null
+      },
+      "failures": []
+    },
+    "real_desensitized/development": {
+      "samples": 0,
+      "candidate_recall": {
+        "numerator": 0,
+        "denominator": 0,
+        "percent": null
+      },
+      "lead_recall": {
+        "numerator": 0,
+        "denominator": 0,
+        "percent": null
+      },
+      "direction_accuracy": {
+        "numerator": 0,
+        "denominator": 0,
+        "percent": null
+      },
+      "known_field_accuracy": {
+        "numerator": 0,
+        "denominator": 0,
+        "percent": null
+      },
+      "unknown_field_safety": {
+        "numerator": 0,
+        "denominator": 0,
+        "percent": null
+      },
+      "lead_false_discovery": {
+        "numerator": 0,
+        "denominator": 0,
+        "percent": null
+      },
+      "match_false_discovery": {
+        "numerator": 0,
+        "denominator": 0,
+        "percent": null
+      },
+      "review_ratio": {
+        "numerator": 0,
+        "denominator": 0,
+        "percent": null
+      },
+      "exact_samples": {
+        "numerator": 0,
+        "denominator": 0,
+        "percent": null
+      },
+      "failures": []
+    },
+    "real_desensitized/acceptance": {
+      "samples": 0,
+      "candidate_recall": {
+        "numerator": 0,
+        "denominator": 0,
+        "percent": null
+      },
+      "lead_recall": {
+        "numerator": 0,
+        "denominator": 0,
+        "percent": null
+      },
+      "direction_accuracy": {
+        "numerator": 0,
+        "denominator": 0,
+        "percent": null
+      },
+      "known_field_accuracy": {
+        "numerator": 0,
+        "denominator": 0,
+        "percent": null
+      },
+      "unknown_field_safety": {
+        "numerator": 0,
+        "denominator": 0,
+        "percent": null
+      },
+      "lead_false_discovery": {
+        "numerator": 0,
+        "denominator": 0,
+        "percent": null
+      },
+      "match_false_discovery": {
+        "numerator": 0,
+        "denominator": 0,
+        "percent": null
+      },
+      "review_ratio": {
+        "numerator": 0,
+        "denominator": 0,
+        "percent": null
+      },
+      "exact_samples": {
+        "numerator": 0,
+        "denominator": 0,
+        "percent": null
+      },
+      "failures": []
+    }
+  },
+  "template_entry_disagreements": [],
+  "revision_comparison": [
+    {
+      "commit": "4b1ba750516fff3d12d3a4bccf26021026bd8d82",
+      "processor_version": "supply-demand/3",
+      "exact_samples": {
+        "numerator": 88,
+        "denominator": 120,
+        "percent": 73.33
+      },
+      "failure_ids": [
+        "S009",
+        "S010",
+        "S020",
+        "S037",
+        "S038",
+        "S055",
+        "S056",
+        "S058",
+        "S060",
+        "S061",
+        "S062",
+        "S065",
+        "S067",
+        "S068",
+        "S070",
+        "S071",
+        "S072",
+        "S073",
+        "S074",
+        "S075",
+        "S077",
+        "S078",
+        "S080",
+        "S086",
+        "S087",
+        "S088",
+        "S099",
+        "S100",
+        "S107",
+        "S109",
+        "S112",
+        "S117"
+      ]
+    },
+    {
+      "commit": "84835e4b5a47bd104752728dc2ad7eb979cfc73e",
+      "processor_version": "supply-demand/3",
+      "exact_samples": {
+        "numerator": 88,
+        "denominator": 120,
+        "percent": 73.33
+      },
+      "failure_ids": [
+        "S009",
+        "S010",
+        "S020",
+        "S037",
+        "S038",
+        "S055",
+        "S056",
+        "S058",
+        "S060",
+        "S061",
+        "S062",
+        "S065",
+        "S067",
+        "S068",
+        "S070",
+        "S071",
+        "S072",
+        "S073",
+        "S074",
+        "S075",
+        "S077",
+        "S078",
+        "S080",
+        "S086",
+        "S087",
+        "S088",
+        "S099",
+        "S100",
+        "S107",
+        "S109",
+        "S112",
+        "S117"
+      ]
+    },
+    {
+      "commit": "88924add0d948b4f8dfa7cc3ed0fe20e8c3a48ce",
+      "processor_version": "supply-demand/3",
+      "exact_samples": {
+        "numerator": 88,
+        "denominator": 120,
+        "percent": 73.33
+      },
+      "failure_ids": [
+        "S009",
+        "S010",
+        "S020",
+        "S037",
+        "S038",
+        "S055",
+        "S056",
+        "S058",
+        "S060",
+        "S061",
+        "S062",
+        "S065",
+        "S067",
+        "S068",
+        "S070",
+        "S071",
+        "S072",
+        "S073",
+        "S074",
+        "S075",
+        "S077",
+        "S078",
+        "S080",
+        "S086",
+        "S087",
+        "S088",
+        "S099",
+        "S100",
+        "S107",
+        "S109",
+        "S112",
+        "S117"
+      ]
+    },
+    {
+      "commit": "bdb07f869e8741a28894355b183de9b71cc904f0",
+      "processor_version": "supply-demand/4",
+      "exact_samples": {
+        "numerator": 106,
+        "denominator": 120,
+        "percent": 88.33
+      },
+      "failure_ids": [
+        "S009",
+        "S010",
+        "S020",
+        "S037",
+        "S038",
+        "S055",
+        "S060",
+        "S086",
+        "S087",
+        "S088",
+        "S099",
+        "S100",
+        "S112",
+        "S117"
+      ]
+    },
+    {
+      "commit": "943bcff3ec88ca253e19734a4d6b849e9a74e14d",
+      "processor_version": "supply-demand/4",
+      "exact_samples": {
+        "numerator": 106,
+        "denominator": 120,
+        "percent": 88.33
+      },
+      "failure_ids": [
+        "S009",
+        "S010",
+        "S020",
+        "S037",
+        "S038",
+        "S055",
+        "S060",
+        "S086",
+        "S087",
+        "S088",
+        "S099",
+        "S100",
+        "S112",
+        "S117"
+      ]
+    },
+    {
+      "commit": "d5842404c1e7befbe311c474a44023d78e46d523",
+      "processor_version": "supply-demand/4",
+      "exact_samples": {
+        "numerator": 106,
+        "denominator": 120,
+        "percent": 88.33
+      },
+      "failure_ids": [
+        "S009",
+        "S010",
+        "S020",
+        "S037",
+        "S038",
+        "S055",
+        "S060",
+        "S086",
+        "S087",
+        "S088",
+        "S099",
+        "S100",
+        "S112",
+        "S117"
+      ]
+    }
+  ]
+}

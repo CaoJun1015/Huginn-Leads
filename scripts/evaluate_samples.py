@@ -41,6 +41,7 @@ def corpus():
 
 
 def main() -> int:
+    print("Legacy regression: 4 repeated templates + 11 capacity boundaries; not a diverse quality estimate.")
     samples = corpus()
     correct = 0
     counts = {"match": 0, "conflict": 0, "review": 0, "none": 0}
