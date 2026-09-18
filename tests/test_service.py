@@ -11,6 +11,7 @@ from unittest.mock import patch
 
 from huginn_leads.config import Settings
 from huginn_leads.database import Database, utcnow
+from huginn_leads.rules import PROCESSOR_VERSION
 from huginn_leads.security import Security
 from huginn_leads.service import Workbench
 from scripts import restore
@@ -217,6 +218,19 @@ class ServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(lead["note"], "已电话联系")
         self.assertEqual((lead["sender_id"], lead["sender_name"]), ("30001", "测试发布者"))
         self.assertEqual(first["jobs"], 1)
+
+    async def test_storage_capacity_does_not_satisfy_memory_in_processing_job(self):
+        await self.create_task()
+        await self.service.ingest(self.message(text="现货 ThinkBook 512GB SSD"))
+        await self.service._process_job(await self.service._claim_job())
+        evaluation = await self.db.fetch_one(
+            "SELECT processor_version,outcome,result_json FROM evaluations"
+        )
+        lead = await self.db.fetch_one("SELECT processor_version,outcome,extracted_json FROM leads")
+        self.assertEqual(PROCESSOR_VERSION, "supply-demand/4")
+        self.assertEqual((evaluation["processor_version"], evaluation["outcome"]), (PROCESSOR_VERSION, "review"))
+        self.assertEqual((lead["processor_version"], lead["outcome"]), (PROCESSOR_VERSION, "review"))
+        self.assertNotIn("memory_gb", json.loads(lead["extracted_json"])["specs"])
 
     async def test_two_tasks_share_raw_message(self):
         await self.create_task()

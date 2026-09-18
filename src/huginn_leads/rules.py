@@ -4,7 +4,7 @@ import hashlib
 import re
 from typing import Any
 
-PROCESSOR_VERSION = "supply-demand/3"
+PROCESSOR_VERSION = "supply-demand/4"
 
 FIELD_TYPES = {"text", "number", "select", "date", "boolean"}
 BUILT_IN_ROLES = {
@@ -32,8 +32,23 @@ SUPPLY_WORDS = re.compile(r"(?:现货(?!吗)|到货|可出(?!吗)|出售|出一?
 DEMAND_WORDS = re.compile(r"(?:求购|采购|收一?批|高价收|需求|寻货|要货)", re.I)
 PRICE = re.compile(r"(?:[¥￥]\s*(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)\s*(?:元|块)(?:/([\u4e00-\u9fa5A-Za-z]+))?)", re.I)
 QUANTITY = re.compile(r"(\d+(?:\.\d+)?)\s*(台|个|套|件|箱|块|张|条)")
-MEMORY = re.compile(r"(?:内存|RAM)?\s*(\d{1,3})\s*G(?:B)?(?:\s*(?:内存|RAM))?", re.I)
-STORAGE = re.compile(r"(?:硬盘|SSD|存储)?\s*(\d+(?:\.\d+)?)\s*(T|TB)(?:\s*(?:硬盘|SSD|存储))?", re.I)
+CAPACITY = r"(?P<value>\d+(?:\.\d+)?)\s*(?P<unit>GB?|TB?)"
+CAPACITY_PATTERNS = {
+    "memory_gb": (
+        re.compile(rf"(?:内存|(?<![A-Za-z])RAM)(?P<gap>\s*){CAPACITY}", re.I),
+        re.compile(rf"{CAPACITY}(?P<gap>\s*)(?:内存|(?<![A-Za-z])RAM(?![A-Za-z]))", re.I),
+    ),
+    "storage_tb": (
+        re.compile(rf"(?:SSD|硬盘|存储)(?P<gap>\s*){CAPACITY}", re.I),
+        re.compile(rf"{CAPACITY}(?P<gap>\s*)(?:SSD|硬盘|存储)", re.I),
+    ),
+    "vram": (
+        re.compile(rf"(?:显存|VRAM)(?P<gap>\s*){CAPACITY}", re.I),
+        re.compile(rf"{CAPACITY}(?P<gap>\s*)(?:显存|VRAM)", re.I),
+    ),
+}
+MEMORY_SHORTHAND = re.compile(r"(?<![\d.])(?P<value>\d{1,3})\s*(?P<unit>G)(?!B|[A-Za-z])", re.I)
+STORAGE_SHORTHAND = re.compile(r"(?<![\d.])(?P<value>\d+(?:\.\d+)?)\s*(?P<unit>TB?)(?![A-Za-z])", re.I)
 CPU = re.compile(r"\b(?:i[3579][- ]?\d{4,5}[A-Za-z]{0,2}|Ultra\s*[3579]\s*\d{3}[A-Za-z]{0,2}|R[3579][- ]?\d{4}[A-Za-z]{0,2}|Ryzen\s*[3579]\s*\d{4}[A-Za-z]{0,2})\b", re.I)
 GPU = re.compile(r"\b(?:RTX|GTX|RX|X)\s*\d{3,4}(?:\s*(?:Ti|SUPER))?\b", re.I)
 
@@ -241,11 +256,47 @@ def _direction(text: str, aliases: list[str]) -> str:
     return "supply" if supply else "demand"
 
 
+def _capacity_specs(text: str) -> dict[str, Any]:
+    matches: dict[str, list[dict[str, Any]]] = {"memory_gb": [], "storage_tb": []}
+    occupied: list[tuple[int, int]] = []
+
+    def add(field: str, match: re.Match[str]) -> None:
+        if any(match.start() < end and start < match.end() for start, end in occupied):
+            return
+        occupied.append(match.span())
+        if field == "vram":
+            return
+        value, unit = float(match.group("value")), match.group("unit").casefold()
+        if field == "memory_gb" and not value.is_integer():
+            return
+        if field == "storage_tb" and unit.startswith("g"):
+            value /= 1024
+        matches[field].append({
+            "value": int(value) if field == "memory_gb" else value,
+            "evidence": match.group(0),
+        })
+
+    labeled = []
+    for field, patterns in CAPACITY_PATTERNS.items():
+        for pattern in patterns:
+            for match in pattern.finditer(text):
+                labeled.append((len(match.group("gap")), match.start(), field, match))
+    for _, _, field, match in sorted(labeled, key=lambda item: item[:2]):
+        add(field, match)
+    for field, pattern in (("memory_gb", MEMORY_SHORTHAND), ("storage_tb", STORAGE_SHORTHAND)):
+        for match in pattern.finditer(text):
+            add(field, match)
+
+    return {
+        field: values[0]
+        for field, values in matches.items()
+        if values and len({item["value"] for item in values}) == 1
+    }
+
+
 def _extract(text: str) -> dict[str, Any]:
     price_match = PRICE.search(text)
     quantity_match = QUANTITY.search(text)
-    memory_match = MEMORY.search(text)
-    storage_match = STORAGE.search(text)
     cpu_match = CPU.search(text)
     gpu_match = GPU.search(text)
     price = None
@@ -263,15 +314,11 @@ def _extract(text: str) -> dict[str, Any]:
             "unit": quantity_match.group(2),
             "evidence": quantity_match.group(0),
         }
-    specs: dict[str, Any] = {}
+    specs = _capacity_specs(text)
     if cpu_match:
         specs["cpu"] = {"value": cpu_match.group(0), "evidence": cpu_match.group(0)}
     if gpu_match:
         specs["gpu"] = {"value": gpu_match.group(0), "evidence": gpu_match.group(0)}
-    if memory_match:
-        specs["memory_gb"] = {"value": int(memory_match.group(1)), "evidence": memory_match.group(0)}
-    if storage_match:
-        specs["storage_tb"] = {"value": float(storage_match.group(1)), "evidence": storage_match.group(0)}
     return {
         "price": price,
         "quantity": quantity,

@@ -44,6 +44,50 @@ class RuleTests(unittest.TestCase):
         )
         self.assertEqual([item["outcome"] for item in results], ["review", "match"])
 
+    def test_memory_storage_and_vram_are_not_confused(self):
+        conditions = CONDITIONS | {"specs": {"memory_gb": 16}, "price": {}, "quantity": {}}
+        cases = [
+            ("现货 ThinkBook 512GB SSD", "review", None, 0.5),
+            ("现货 ThinkBook 内存8GB SSD512GB", "conflict", 8, 0.5),
+            ("现货 ThinkBook 内存16GB SSD512GB", "match", 16, 0.5),
+            ("现货 ThinkBook RTX 4060 显存8GB", "review", None, None),
+            ("现货 ThinkBook SSD512GB 内存16GB", "match", 16, 0.5),
+            ("现货 ThinkBook 512GB SSD 16GB内存", "match", 16, 0.5),
+            ("现货 ThinkBook ssd512gb ram16gb", "match", 16, 0.5),
+            ("现货 ThinkBook 8GB VRAM 1TB硬盘", "review", None, 1),
+            ("现货 ThinkBook 512GB", "review", None, None),
+        ]
+        for text, outcome, memory, storage in cases:
+            with self.subTest(text=text):
+                result = evaluate(text, conditions)[0]
+                specs = result["extracted"]["specs"]
+                self.assertEqual(result["outcome"], outcome)
+                self.assertEqual(specs.get("memory_gb", {}).get("value"), memory)
+                self.assertEqual(specs.get("storage_tb", {}).get("value"), storage)
+
+    def test_capacity_evidence_and_existing_shorthand_are_preserved(self):
+        result = evaluate("现货 ThinkBook 16G 1TB", CONDITIONS | {"price": {}, "quantity": {}})[0]
+        self.assertEqual(result["outcome"], "match")
+        self.assertEqual(result["extracted"]["specs"], {
+            "memory_gb": {"value": 16, "evidence": "16G"},
+            "storage_tb": {"value": 1.0, "evidence": "1TB"},
+        })
+
+    def test_ambiguous_and_multiline_capacities_stay_with_their_item(self):
+        conditions = CONDITIONS | {"specs": {"memory_gb": 16}, "price": {}, "quantity": {}}
+        ambiguous = evaluate("现货 ThinkBook 内存8GB RAM16GB SSD512GB", conditions)[0]
+        self.assertEqual(ambiguous["outcome"], "review")
+        self.assertNotIn("memory_gb", ambiguous["extracted"]["specs"])
+
+        results = evaluate(
+            "现货 ThinkBook A 512GB SSD\n"
+            "现货 ThinkBook B 内存16GB SSD512GB",
+            conditions,
+        )
+        self.assertEqual([item["outcome"] for item in results], ["review", "match"])
+        self.assertNotIn("memory_gb", results[0]["extracted"]["specs"])
+        self.assertEqual(results[1]["extracted"]["specs"]["memory_gb"]["value"], 16)
+
     def test_non_candidate_is_empty(self):
         self.assertFalse(is_candidate("戴尔台式机现货", CONDITIONS))
         self.assertEqual(evaluate("戴尔台式机现货", CONDITIONS), [])
