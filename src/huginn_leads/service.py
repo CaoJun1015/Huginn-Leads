@@ -26,6 +26,20 @@ def _days(days: int) -> str:
     return (datetime.now(timezone.utc) + timedelta(days=days)).isoformat(timespec="seconds")
 
 
+def snapshot_lead_source(connection: sqlite3.Connection, task_id: str, message_id: str) -> None:
+    """Capture provenance for manual and machine leads in their write transaction."""
+    connection.execute(
+        """UPDATE leads SET (platform, account_id, source_id, source_type, peer_id,
+             source_name, native_message_id, message_time, received_at) = (
+             SELECT r.platform, r.account_id, r.source_id, r.source_type, r.peer_id,
+                    COALESCE(s.user_alias, s.platform_name, r.peer_id), r.native_message_id,
+                    r.message_time, r.received_at
+             FROM raw_messages r LEFT JOIN sources s ON s.id=r.source_id WHERE r.id=?
+           ) WHERE task_id=? AND message_id=? AND received_at IS NULL""",
+        (message_id, task_id, message_id),
+    )
+
+
 class Workbench:
     def __init__(self, database: Database, settings: Settings):
         self.database = database
@@ -349,6 +363,18 @@ class Workbench:
         lead_days = int(await self.database.get_setting("lead_days") or self.settings.lead_days)
 
         def write(connection: sqlite3.Connection) -> None:
+            current_job = connection.execute(
+                "SELECT message_id, status FROM processing_jobs WHERE id=?", (job["id"],)
+            ).fetchone()
+            # Cleanup/deletion may commit while evaluation runs outside the lock.
+            if not current_job or current_job["status"] != "processing":
+                return
+            if current_job["message_id"] is None:
+                connection.execute(
+                    "UPDATE processing_jobs SET status='source_expired', lease_until=NULL, updated_at=? WHERE id=?",
+                    (now, job["id"]),
+                )
+                return
             task_state = connection.execute(
                 "SELECT status, expires_at FROM tasks WHERE id=?", (row["task_id"],)
             ).fetchone()
@@ -393,7 +419,8 @@ class Workbench:
                          outcome=excluded.outcome, reason=excluded.reason,
                          sender_id=excluded.sender_id, sender_name=excluded.sender_name, superseded_at=NULL,
                          evidence_expires_at=excluded.evidence_expires_at, updated_at=excluded.updated_at,
-                         version=leads.version+1""",
+                         version=leads.version+1
+                       WHERE leads.origin='machine'""",
                     (
                         _uuid(), row["task_id"], row["message_id"], item["item_key"], row["revision"], PROCESSOR_VERSION,
                         item["direction"], json.dumps(item["extracted"], ensure_ascii=False),
@@ -406,14 +433,15 @@ class Workbench:
             if keys:
                 placeholders = ",".join("?" for _ in keys)
                 connection.execute(
-                    f"UPDATE leads SET superseded_at=?, updated_at=?, version=version+1 WHERE task_id=? AND message_id=? AND item_key NOT IN ({placeholders}) AND superseded_at IS NULL",
+                    f"UPDATE leads SET superseded_at=?, updated_at=?, version=version+1 WHERE task_id=? AND message_id=? AND origin='machine' AND item_key NOT IN ({placeholders}) AND superseded_at IS NULL",
                     (now, now, row["task_id"], row["message_id"], *keys),
                 )
             else:
                 connection.execute(
-                    "UPDATE leads SET superseded_at=?, updated_at=?, version=version+1 WHERE task_id=? AND message_id=? AND superseded_at IS NULL",
+                    "UPDATE leads SET superseded_at=?, updated_at=?, version=version+1 WHERE task_id=? AND message_id=? AND origin='machine' AND superseded_at IS NULL",
                     (now, now, row["task_id"], row["message_id"]),
                 )
+            snapshot_lead_source(connection, row["task_id"], row["message_id"])
             connection.execute(
                 "UPDATE processing_jobs SET status='done', lease_until=NULL, error_code=NULL, updated_at=? WHERE id=?",
                 (now, job["id"]),

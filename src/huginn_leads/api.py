@@ -21,7 +21,7 @@ from .database import Database, utcnow
 from .external import ExternalCatalog, ExternalSourceError, external_presets, source_view, validate_source_config
 from .rules import DEFAULT_TEMPLATE_FIELDS, PROCESSOR_VERSION, validate_conditions, validate_template_fields
 from .security import Security
-from .service import Workbench
+from .service import Workbench, snapshot_lead_source
 
 COOKIE = "huginn_session"
 
@@ -817,13 +817,26 @@ def install_api(
         scope = f"delete-task:{task_id}:{int(delete_leads)}"
         if not consume_confirmation(confirmation_token, scope):
             raise _error(400, "confirmation_required", "删除确认已过期，请重新预览")
-        if not delete_leads:
-            await database.execute("UPDATE tasks SET status='archived', updated_at=?, version=version+1 WHERE id=?", (utcnow(), task_id))
-            return {"archived": True}
-        changed = await database.execute("DELETE FROM tasks WHERE id=?", (task_id,))
-        if not changed:
-            raise _error(404, "task_not_found", "任务不存在")
-        return {"deleted": True}
+        def write(connection: sqlite3.Connection) -> dict[str, bool]:
+            if not connection.execute("SELECT 1 FROM tasks WHERE id=?", (task_id,)).fetchone():
+                raise _error(404, "task_not_found", "任务不存在")
+            if not delete_leads:
+                connection.execute("UPDATE tasks SET status='archived', updated_at=?, version=version+1 WHERE id=?", (utcnow(), task_id))
+                connection.execute(
+                    "UPDATE processing_jobs SET status='cancelled', lease_until=NULL, updated_at=? WHERE task_id=? AND status IN ('pending','deferred','processing')",
+                    (utcnow(), task_id),
+                )
+                return {"archived": True}
+            # Jobs reference replays without CASCADE; remove them before replays.
+            connection.execute("DELETE FROM processing_jobs WHERE task_id=?", (task_id,))
+            connection.execute("DELETE FROM replays WHERE task_id=?", (task_id,))
+            connection.execute("DELETE FROM tasks WHERE id=?", (task_id,))
+            return {"deleted": True}
+
+        try:
+            return await database.write(write)
+        except sqlite3.Error as exc:
+            raise _error(409, "delete_failed", "删除失败，操作已整体回滚，请重新预览后重试") from exc
 
     @router.get("/messages")
     async def get_messages(
@@ -994,20 +1007,17 @@ def install_api(
                 clauses.append(f"{field}=?")
                 params.append(value)
         if q:
-            clauses.append("(r.text LIKE ? OR COALESCE(l.sender_name,r.sender_name) LIKE ? OR COALESCE(l.sender_id,r.sender_id) LIKE ? OR t.name LIKE ?)")
-            params.extend([f"%{q}%"] * 4)
+            clauses.append("(r.text LIKE ? OR (CASE WHEN json_valid(l.evidence_json) THEN json_extract(l.evidence_json, '$.text') END) LIKE ? OR COALESCE(l.sender_name,r.sender_name) LIKE ? OR COALESCE(l.sender_id,r.sender_id) LIKE ? OR t.name LIKE ?)")
+            params.extend([f"%{q}%"] * 5)
         if point:
             clauses.append("(l.created_at<? OR (l.created_at=? AND l.id<?))")
             params.extend([point[0], point[0], point[1]])
         rows = await database.fetch_all(
             """SELECT l.*, t.name AS task_name,
                COALESCE(l.sender_id,r.sender_id) AS contact_sender_id,
-               COALESCE(l.sender_name,r.sender_name) AS contact_sender_name, r.message_time,
-               COALESCE(s.user_alias, s.platform_name, s.peer_id) AS source_name,
-               s.source_type, s.peer_id
+               COALESCE(l.sender_name,r.sender_name) AS contact_sender_name
                FROM leads l JOIN tasks t ON t.id=l.task_id
                LEFT JOIN raw_messages r ON r.id=l.message_id
-               LEFT JOIN sources s ON s.id=r.source_id
                WHERE """ + " AND ".join(clauses) + " ORDER BY l.created_at DESC, l.id DESC LIMIT ?",
             (*params, size + 1),
         )
@@ -1026,8 +1036,7 @@ def install_api(
         row = await database.fetch_one(
             """SELECT l.*, t.name AS task_name, r.text AS raw_text,
                COALESCE(l.sender_id,r.sender_id) AS contact_sender_id,
-               COALESCE(l.sender_name,r.sender_name) AS contact_sender_name,
-               r.message_time, r.account_id, r.source_type, r.peer_id
+               COALESCE(l.sender_name,r.sender_name) AS contact_sender_name
                FROM leads l JOIN tasks t ON t.id=l.task_id LEFT JOIN raw_messages r ON r.id=l.message_id WHERE l.id=?""",
             (lead_id,),
         )
@@ -1076,30 +1085,34 @@ def install_api(
     @router.post("/tasks/{task_id}/manual-leads", status_code=201)
     async def manual_lead(task_id: str, message_id: str = Body(embed=True), _session=Depends(require_session)):
         now = utcnow()
-        message = await database.fetch_one("SELECT * FROM raw_messages WHERE id=?", (message_id,))
-        task = await database.fetch_one("SELECT * FROM tasks WHERE id=?", (task_id,))
-        if not message:
-            raise _error(404, "message_expired_or_missing", "原文已过期或不存在")
-        if not task:
-            raise _error(404, "task_not_found", "任务不存在")
         key = "manual-" + hashlib.sha256(message_id.encode()).hexdigest()[:16]
         lead_days = int(await database.get_setting("lead_days") or settings.lead_days)
-        lead_id = str(uuid.uuid4())
-        await database.execute(
-            """INSERT INTO leads(id, task_id, message_id, item_key, revision, processor_version, direction,
-               extracted_json, evidence_json, comparison_json, outcome, reason, sender_id, sender_name,
-               evidence_expires_at, created_at, updated_at)
-               VALUES (?, ?, ?, ?, ?, ?, 'unknown', '{}', ?, '[]', 'review', '人工加入', ?, ?, ?, ?, ?)
-               ON CONFLICT(task_id, message_id, item_key) DO UPDATE SET
-                 sender_id=excluded.sender_id, sender_name=excluded.sender_name,
-                 superseded_at=NULL, updated_at=excluded.updated_at""",
-            (lead_id, task_id, message_id, key, task["current_revision"], PROCESSOR_VERSION,
-             json.dumps({"text": message["text"], "manual": True}, ensure_ascii=False),
-             message["sender_id"], message["sender_name"],
-             (datetime.now(timezone.utc) + timedelta(days=lead_days)).isoformat(timespec="seconds"), now, now),
-        )
-        row = await database.fetch_one("SELECT id FROM leads WHERE task_id=? AND message_id=? AND item_key=?", (task_id, message_id, key))
-        return {"id": row["id"], "manual": True}
+
+        def write(connection: sqlite3.Connection) -> dict[str, Any]:
+            message = connection.execute("SELECT * FROM raw_messages WHERE id=?", (message_id,)).fetchone()
+            task = connection.execute("SELECT * FROM tasks WHERE id=?", (task_id,)).fetchone()
+            if not message:
+                raise _error(404, "message_expired_or_missing", "原文已过期或不存在")
+            if not task:
+                raise _error(404, "task_not_found", "任务不存在")
+            connection.execute(
+                """INSERT INTO leads(id, task_id, message_id, item_key, revision, processor_version, direction,
+                   extracted_json, evidence_json, comparison_json, outcome, reason, sender_id, sender_name,
+                   evidence_expires_at, created_at, updated_at, origin)
+                   VALUES (?, ?, ?, ?, ?, ?, 'unknown', '{}', ?, '[]', 'review', '人工加入', ?, ?, ?, ?, ?, 'manual')
+                   ON CONFLICT(task_id, message_id, item_key) DO UPDATE SET
+                     origin='manual', sender_id=excluded.sender_id, sender_name=excluded.sender_name,
+                     superseded_at=NULL, updated_at=excluded.updated_at, version=leads.version+1""",
+                (str(uuid.uuid4()), task_id, message_id, key, task["current_revision"], PROCESSOR_VERSION,
+                 json.dumps({"text": message["text"], "manual": True}, ensure_ascii=False),
+                 message["sender_id"], message["sender_name"],
+                 (datetime.now(timezone.utc) + timedelta(days=lead_days)).isoformat(timespec="seconds"), now, now),
+            )
+            snapshot_lead_source(connection, task_id, message_id)
+            row = connection.execute("SELECT id FROM leads WHERE task_id=? AND message_id=? AND item_key=?", (task_id, message_id, key)).fetchone()
+            return {"id": row["id"], "manual": True}
+
+        return await database.write(write)
 
     @router.get("/settings/retention")
     async def get_retention(_session=Depends(require_session)):
@@ -1192,28 +1205,50 @@ def install_api(
         )
         return {"items": rows}
 
+    def delete_scope(source_id: int | None, before: str | None) -> tuple[str, list[Any], str]:
+        clauses, params = [], []
+        if source_id is not None:
+            if source_id <= 0:
+                raise _error(400, "invalid_source", "来源标识无效")
+            clauses.append("source_id=?")
+            params.append(source_id)
+        if before is not None:
+            try:
+                cutoff = datetime.fromisoformat(before.replace("Z", "+00:00"))
+                if cutoff.tzinfo is None:
+                    raise ValueError
+                before = cutoff.astimezone(timezone.utc).isoformat()
+            except ValueError as exc:
+                raise _error(400, "invalid_cutoff", "截止时间必须是包含时区的有效时间") from exc
+            clauses.append("julianday(received_at)<julianday(?)")
+            params.append(before)
+        if not clauses:
+            raise _error(400, "delete_scope_required", "必须指定来源或截止时间")
+        return " AND ".join(clauses), params, "delete:" + json.dumps({"source_id": source_id, "before": before}, sort_keys=True)
+
     @router.post("/data/delete-preview")
     async def delete_preview(
         source_id: int | None = None,
         before: str | None = None,
         _session=Depends(require_session),
     ):
-        clauses, params = [], []
-        if source_id:
-            clauses.append("r.source_id=?")
-            params.append(source_id)
-        if before:
-            clauses.append("r.received_at<?")
-            params.append(before)
-        if not clauses:
-            raise _error(400, "delete_scope_required", "必须指定来源或截止时间")
-        where = " AND ".join(clauses)
-        row = await database.fetch_one(f"SELECT COUNT(*) AS value FROM raw_messages r WHERE {where}", params)
-        impacted = await database.fetch_all(
-            f"SELECT DISTINCT l.task_id, t.name FROM leads l JOIN tasks t ON t.id=l.task_id JOIN raw_messages r ON r.id=l.message_id WHERE {where}", params
-        )
-        scope = json.dumps({"source_id": source_id, "before": before}, sort_keys=True)
-        return {"message_count": row["value"], "affected_tasks": impacted, "confirmation_token": issue_confirmation("delete:" + scope)}
+        where, params, scope = delete_scope(source_id, before)
+
+        def read(connection: sqlite3.Connection) -> dict[str, Any]:
+            messages = connection.execute(f"SELECT COUNT(*) FROM raw_messages WHERE {where}", params).fetchone()[0]
+            leads = connection.execute(f"SELECT COUNT(*) FROM leads WHERE {where}", params).fetchone()[0]
+            impacted = connection.execute(
+                f"""SELECT id AS task_id, name FROM tasks WHERE id IN (
+                      SELECT task_id FROM leads WHERE {where}
+                      UNION SELECT task_id FROM processing_jobs WHERE message_id IN (SELECT id FROM raw_messages WHERE {where})
+                      UNION SELECT task_id FROM evaluations WHERE message_id IN (SELECT id FROM raw_messages WHERE {where})
+                    ) ORDER BY id""", params * 3,
+            ).fetchall()
+            return {"message_count": messages, "lead_count": leads, "evidence_count": leads,
+                    "affected_tasks": [dict(row) for row in impacted]}
+
+        return {**await database.write(read), "confirmation_token": issue_confirmation(scope),
+                "cutoff_basis": "received_at", "limitation": "历史来源或接收时间未知的证据无法按对应范围删除；备份副本受备份保留策略控制"}
 
     @router.post("/data/delete")
     async def delete_data(
@@ -1222,22 +1257,23 @@ def install_api(
         confirmation_token: str = Body(embed=True),
         _session=Depends(require_session),
     ):
-        scope = json.dumps({"source_id": source_id, "before": before}, sort_keys=True)
-        if not consume_confirmation(confirmation_token, "delete:" + scope):
+        where, params, scope = delete_scope(source_id, before)
+        if not consume_confirmation(confirmation_token, scope):
             raise _error(400, "confirmation_required", "删除确认已过期，请重新预览")
-        clauses, params = [], []
-        if source_id:
-            clauses.append("r.source_id=?")
-            params.append(source_id)
-        if before:
-            clauses.append("r.received_at<?")
-            params.append(before)
-        where = " AND ".join(clauses)
 
-        def write(connection: sqlite3.Connection) -> int:
-            connection.execute(f"DELETE FROM leads WHERE message_id IN (SELECT r.id FROM raw_messages r WHERE {where})", params)
-            return connection.execute(f"DELETE FROM raw_messages WHERE {where}", params).rowcount
+        def write(connection: sqlite3.Connection) -> dict[str, int]:
+            leads = connection.execute(f"DELETE FROM leads WHERE {where}", params).rowcount
+            connection.execute(
+                f"""UPDATE processing_jobs SET status='source_expired', lease_until=NULL, updated_at=?
+                    WHERE message_id IN (SELECT id FROM raw_messages WHERE {where})
+                      AND status IN ('pending','deferred','processing')""", [utcnow(), *params],
+            )
+            messages = connection.execute(f"DELETE FROM raw_messages WHERE {where}", params).rowcount
+            return {"deleted_messages": messages, "deleted_leads": leads}
 
-        return {"deleted_messages": await database.write(write)}
+        try:
+            return await database.write(write)
+        except sqlite3.Error as exc:
+            raise _error(409, "delete_failed", "删除失败，操作已整体回滚，请重新预览后重试") from exc
 
     app.include_router(router)

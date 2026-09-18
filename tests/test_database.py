@@ -55,7 +55,7 @@ class MigrationTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(await db.integrity_check())
 
     async def test_each_version_rolls_back_schema_data_and_registration_then_retries(self):
-        for version in range(1, 6):
+        for version in range(1, 7):
             with self.subTest(version=version), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory)
                 path = root / "test.db"
@@ -76,7 +76,7 @@ class MigrationTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(self.dump(path), before)
                 await db.execute("DROP TRIGGER fail_registration")
                 await db.migrate()
-                self.assertEqual([row["version"] for row in await db.fetch_all("SELECT version FROM schema_migrations ORDER BY version")], [1, 2, 3, 4, 5])
+                self.assertEqual([row["version"] for row in await db.fetch_all("SELECT version FROM schema_migrations ORDER BY version")], [1, 2, 3, 4, 5, 6])
                 before_restart = self.dump(path)
                 await db.migrate()
                 self.assertEqual(self.dump(path), before_restart)
@@ -85,12 +85,49 @@ class MigrationTests(unittest.IsolatedAsyncioTestCase):
                 if version > 1:
                     await self.assert_preserved(db)
 
+    async def test_v5_provenance_backfill_manual_markers_and_unknown_history(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            db = Database(root / "test.db", self.migrations_until(root, 1))
+            await db.migrate()
+            await self.seed_v1(db)
+            await Database(db.path, self.migrations_until(root, 5)).migrate()
+            await db.execute("UPDATE raw_messages SET message_time='2020-01-02T03:04:05+00:00', received_at='2026-09-18T00:00:00+00:00'")
+            await db.execute("UPDATE leads SET superseded_at='old-replay'")
+            # Prefix, JSON-only marker, ordinary machine, and expired unknown history.
+            columns = [r["name"] for r in await db.fetch_all("PRAGMA table_info(leads)")]
+            original = await db.fetch_one("SELECT * FROM leads WHERE id='l'")
+            for identifier, evidence, message in (("json-manual", '{"text":"kept","manual":true}', "m"),
+                                                   ("machine", '{"text":"machine"}', "m"),
+                                                   ("unknown", '{"text":"history","manual":true}', None)):
+                row = original | {"id": identifier, "item_key": identifier, "evidence_json": evidence, "message_id": message}
+                await db.execute(f"INSERT INTO leads({','.join(columns)}) VALUES ({','.join('?' for _ in columns)})", [row[c] for c in columns])
+            upgraded = Database(db.path, MIGRATIONS)
+            await upgraded.migrate()
+            for row in await upgraded.fetch_all("SELECT * FROM leads"):
+                self.assertEqual(row["origin"], "machine" if row["id"] == "machine" else "manual")
+                self.assertEqual(row["superseded_at"], "old-replay" if row["id"] == "machine" else None)
+                self.assertEqual((row["note"], row["manual_status"], row["manual_overrides_json"], row["seen_at"]),
+                                 ("follow-up", "contacted", '{"price":123}', "seen"))
+                if row["id"] == "unknown":
+                    self.assertTrue(all(row[c] is None for c in ("source_id", "account_id", "platform", "message_time", "received_at")))
+                else:
+                    self.assertEqual((row["platform"], row["account_id"], row["source_id"], row["source_type"], row["peer_id"], row["source_name"], row["native_message_id"]),
+                                     ("qq", "a", 1, "group", "g", "g", "native"))
+                    self.assertEqual(row["message_time"], "2020-01-02T03:04:05+00:00")
+                    self.assertEqual(row["received_at"], "2026-09-18T00:00:00+00:00")
+            before = self.dump(db.path)
+            await upgraded.migrate()
+            self.assertEqual(self.dump(db.path), before)
+            self.assertEqual(await upgraded.fetch_all("PRAGMA foreign_key_check"), [])
+            self.assertTrue(await upgraded.integrity_check())
+
     async def test_independent_runners_recheck_version_under_database_lock(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "test.db"
             first, second = Database(path, MIGRATIONS), Database(path, MIGRATIONS)
             await asyncio.gather(first.migrate(), second.migrate())
-            self.assertEqual([r["version"] for r in await first.fetch_all("SELECT version FROM schema_migrations ORDER BY version")], [1, 2, 3, 4, 5])
+            self.assertEqual([r["version"] for r in await first.fetch_all("SELECT version FROM schema_migrations ORDER BY version")], [1, 2, 3, 4, 5, 6])
             self.assertTrue(await first.integrity_check())
 
     async def test_script_cannot_commit_runner_transaction(self):
