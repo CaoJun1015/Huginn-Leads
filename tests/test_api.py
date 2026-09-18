@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 from pathlib import Path
 import sqlite3
 import tempfile
@@ -113,6 +114,44 @@ class ApiTests(unittest.TestCase):
             json={"enabled": False, "version": source["version"]},
         )
         self.assertEqual(stale.status_code, 409)
+
+    def test_task_expiry_timezone_validation_and_region_contract(self):
+        self.authenticate()
+        asyncio.run(self.service.connect_account("10001", "测试账号"))
+        asyncio.run(self.service.refresh_sources("10001", [{"group_id": 20001, "group_name": "测试群"}]))
+        source = self.client.get("/api/sources").json()["items"][0]
+        source = self.client.patch(
+            f"/api/sources/{source['id']}", headers=self.write_headers,
+            json={"enabled": True, "version": source["version"]},
+        ).json()
+        conditions = {
+            "direction": "purchase", "product": "办公本", "aliases": ["ThinkBook"],
+            "alias_mode": "any", "specs": {}, "price": {}, "quantity": {},
+            "trade": {"region": "上海"}, "source_ids": [source["id"]],
+        }
+        created = self.client.post(
+            "/api/tasks", headers=self.write_headers,
+            json={"name": "跨时区任务", "expires_at": "2099-07-01T00:00:00+08:00", "conditions": conditions},
+        )
+        self.assertEqual(created.status_code, 201, created.text)
+        self.assertEqual(created.json()["expires_at"], "2099-06-30T16:00:00+00:00")
+
+        legacy = self.client.post(
+            "/api/tasks", headers=self.write_headers,
+            json={"name": "日期兼容任务", "expires_at": "2099-06-30", "conditions": conditions},
+        )
+        self.assertEqual(legacy.status_code, 201, legacy.text)
+        local_cutoff = datetime.fromisoformat(legacy.json()["expires_at"]).astimezone()
+        self.assertEqual(local_cutoff.strftime("%Y-%m-%d %H:%M"), "2099-07-01 00:00")
+
+        region = next(field for field in self.client.get("/api/templates").json()["items"][0]["fields"] if field.get("role") == "region")
+        self.assertFalse(region["match"])
+        self.assertIn("仅记录，不参与匹配", region["help"])
+        invalid = self.client.patch(
+            f"/api/tasks/{created.json()['id']}", headers=self.write_headers,
+            json={"version": created.json()["version"], "expires_at": "2099-06-30T00:00:00"},
+        )
+        self.assertEqual((invalid.status_code, invalid.json()["code"]), (400, "invalid_task"))
 
     def test_message_summary_and_sender_qq(self):
         self.authenticate()

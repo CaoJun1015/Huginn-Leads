@@ -26,6 +26,20 @@ def _days(days: int) -> str:
     return (datetime.now(timezone.utc) + timedelta(days=days)).isoformat(timespec="seconds")
 
 
+def _task_expired(value: str | None, now: str) -> bool:
+    if not value:
+        return False
+    if len(value) == 10:
+        try:
+            return datetime.fromisoformat(value).date() < datetime.now().astimezone().date()
+        except ValueError:
+            return True
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00")) <= datetime.fromisoformat(now)
+    except ValueError:
+        return True
+
+
 def snapshot_lead_source(connection: sqlite3.Connection, task_id: str, message_id: str) -> None:
     """Capture provenance for manual and machine leads in their write transaction."""
     connection.execute(
@@ -303,11 +317,12 @@ class Workbench:
             ).fetchone()[0]
             job_status = "pending" if active_count < self.settings.max_active_jobs else "deferred"
             tasks = connection.execute(
-                """SELECT t.id, t.current_revision FROM tasks t
+                """SELECT t.id, t.current_revision, t.expires_at FROM tasks t
                    JOIN task_revision_sources trs ON trs.task_id=t.id AND trs.revision=t.current_revision
-                   WHERE trs.source_id=? AND t.status='active' AND (t.expires_at IS NULL OR t.expires_at>?)""",
-                (source["id"], now),
+                   WHERE trs.source_id=? AND t.status='active'""",
+                (source["id"],),
             ).fetchall()
+            tasks = [task for task in tasks if not _task_expired(task["expires_at"], now)]
             for task in tasks:
                 connection.execute(
                     """INSERT OR IGNORE INTO processing_jobs(
@@ -407,7 +422,7 @@ class Workbench:
                 (utcnow(), job["id"]),
             )
             return
-        if row["task_status"] != "active" or (row["expires_at"] and row["expires_at"] <= utcnow()):
+        if row["task_status"] != "active" or _task_expired(row["expires_at"], utcnow()):
             await self.database.execute(
                 "UPDATE processing_jobs SET status='cancelled', lease_until=NULL, updated_at=? WHERE id=?",
                 (utcnow(), job["id"]),
@@ -435,9 +450,7 @@ class Workbench:
             task_state = connection.execute(
                 "SELECT status, expires_at FROM tasks WHERE id=?", (row["task_id"],)
             ).fetchone()
-            if not task_state or task_state["status"] != "active" or (
-                task_state["expires_at"] and task_state["expires_at"] <= now
-            ):
+            if not task_state or task_state["status"] != "active" or _task_expired(task_state["expires_at"], now):
                 connection.execute(
                     "UPDATE processing_jobs SET status='cancelled', lease_until=NULL, updated_at=? WHERE id=?",
                     (now, job["id"]),

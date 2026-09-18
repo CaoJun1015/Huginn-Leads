@@ -232,6 +232,14 @@ class ServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((lead["processor_version"], lead["outcome"]), (PROCESSOR_VERSION, "review"))
         self.assertNotIn("memory_gb", json.loads(lead["extracted_json"])["specs"])
 
+    async def test_legacy_date_expiry_includes_the_local_selected_day(self):
+        await self.create_task()
+        today = datetime.now().astimezone().date()
+        await self.db.execute("UPDATE tasks SET expires_at=? WHERE id='task-1'", (today.isoformat(),))
+        self.assertEqual((await self.service.ingest(self.message("today")))["jobs"], 1)
+        await self.db.execute("UPDATE tasks SET expires_at=? WHERE id='task-1'", ((today - timedelta(days=1)).isoformat(),))
+        self.assertEqual((await self.service.ingest(self.message("yesterday")))["jobs"], 0)
+
     async def test_two_tasks_share_raw_message(self):
         await self.create_task()
         now = utcnow()

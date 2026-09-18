@@ -24,8 +24,8 @@ DEFAULT_TEMPLATE_FIELDS = [
     {"key": "quantity", "label": "数量下限", "type": "number", "required": False, "show_in_list": True, "match": True, "role": "quantity"},
     {"key": "quantity_unit", "label": "数量单位", "type": "select", "required": False, "show_in_list": False, "match": False,
      "options": [{"value": value, "label": value} for value in ("台", "个", "套", "件")], "role": "quantity_unit"},
-    {"key": "region", "label": "交付地区", "type": "text", "required": False, "show_in_list": True, "match": True,
-     "help": "采购时代表目标收货地，销售时代表可交付地。", "role": "region"},
+    {"key": "region", "label": "交付地区", "type": "text", "required": False, "show_in_list": True, "match": False,
+     "help": "仅记录，不参与匹配。采购时代表目标收货地，销售时代表可交付地。", "role": "region"},
 ]
 
 SUPPLY_WORDS = re.compile(r"(?:现货(?!吗)|到货|可出(?!吗)|出售|出一?批|供应|有货(?!吗)|清仓|转让)", re.I)
@@ -93,7 +93,10 @@ def validate_template_fields(fields: Any) -> list[dict[str, Any]]:
         if options:
             item["options"] = options
         help_text = str(raw.get("help", "")).strip()
-        if help_text:
+        if role == "region":
+            item["match"] = False
+            item["help"] = "仅记录，不参与匹配。"
+        elif help_text:
             item["help"] = help_text[:240]
         if role:
             item["role"] = role

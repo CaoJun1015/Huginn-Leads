@@ -3,6 +3,8 @@ import { FormEvent, ReactNode, useCallback, useEffect, useMemo, useRef, useState
 type Json = Record<string, any>
 type View = 'tasks' | 'templates' | 'external' | 'leads' | 'sources' | 'messages' | 'operations'
 type Section = 'leads' | 'tasks' | 'connections' | 'settings'
+type LeadFilters = { task: string, outcome: string, status: string, q: string, conflicts: boolean }
+type LeadPage = { items: Json[], next_cursor: string | null }
 
 const labels: Record<View, [string, string]> = {
   tasks: ['监控任务', '管理正在关注的商品和业务条件'],
@@ -36,16 +38,18 @@ const NAPCAT_HOME = 'https://github.com/NapNeko/NapCatQQ'
 const NAPCAT_DOWNLOAD = `${NAPCAT_HOME}/releases`
 
 let csrf = ''
+const SESSION_EXPIRED = 'huginn-session-expired'
 
-async function api(path: string, options: RequestInit = {}) {
+async function api<T = Json>(path: string, options: RequestInit = {}): Promise<T> {
   const method = options.method || 'GET'
   const headers = new Headers(options.headers)
   if (options.body) headers.set('Content-Type', 'application/json')
   if (!['GET', 'HEAD'].includes(method)) headers.set('X-CSRF-Token', csrf)
   const response = await fetch(`/api${path}`, { ...options, headers, credentials: 'same-origin' })
   const payload = await response.json().catch(() => ({ code: 'bad_response', message: '服务器返回了无法读取的响应' }))
+  if (response.status === 401 && !path.startsWith('/auth/')) window.dispatchEvent(new Event(SESSION_EXPIRED))
   if (!response.ok) throw new Error(payload.message || '操作失败')
-  return payload
+  return payload as T
 }
 
 async function allPages(path: string) {
@@ -59,6 +63,33 @@ async function allPages(path: string) {
 
 function formatTime(value?: string | null) {
   return value ? new Intl.DateTimeFormat('zh-CN', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)) : '暂无'
+}
+
+function expiryDate(value?: string | null) {
+  if (!value) return ''
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value
+  const date = new Date(value)
+  if (Number.isNaN(date.valueOf())) return ''
+  date.setDate(date.getDate() - 1)
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
+function expiryCutoff(value: string) {
+  if (!value) return null
+  const date = new Date(`${value}T00:00:00`)
+  date.setDate(date.getDate() + 1)
+  return date.toISOString()
+}
+
+function taskExpired(value?: string | null) {
+  if (!value) return false
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const today = new Date()
+    const current = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+    return value < current
+  }
+  const parsed = new Date(value)
+  return Number.isNaN(parsed.valueOf()) || parsed <= new Date()
 }
 
 function bytes(value = 0) {
@@ -78,7 +109,7 @@ function Dialog({ open, title, children, onClose, wide = false }: { open: boolea
 
 function Badge({ value }: { value: string }) {
   const text: Record<string, string> = {
-    active: '运行中', paused: '已暂停', completed: '已完成', archived: '已归档',
+    active: '运行中', paused: '已暂停', completed: '已完成', archived: '已归档', expired: '已到期',
     match: '匹配', review: '待核对', conflict: '冲突', not_match: '未命中', pending: '待处理', failed: '失败',
     new: '新线索', contacted: '已联系', ignored: '已忽略', supply: '供货', demand: '求购', unknown: '不明确',
   }
@@ -123,7 +154,7 @@ function TaskForm({ open, task, sources, templates, onClose, onSaved }: { open: 
   useEffect(() => {
     if (!open) return
     const c = task?.conditions || {}
-    setForm({ name: task?.name || '', template_id: task?.template_id || templates[0]?.id || '', aliases: (c.aliases || []).join(', '), weak_aliases: (c.weak_aliases || []).join(', '), alias_mode: c.alias_mode || 'any', values: task?.values || {}, upgrade: false, source_ids: c.source_ids || sources.filter(s => s.enabled).map(s => s.id), expires_at: task?.expires_at?.slice(0, 10) || '' }); setError('')
+    setForm({ name: task?.name || '', template_id: task?.template_id || templates[0]?.id || '', aliases: (c.aliases || []).join(', '), weak_aliases: (c.weak_aliases || []).join(', '), alias_mode: c.alias_mode || 'any', values: task?.values || {}, upgrade: false, source_ids: c.source_ids || sources.filter(s => s.enabled).map(s => s.id), expires_at: expiryDate(task?.expires_at) }); setError('')
   }, [open, task, sources, templates])
   function field(name: string, value: any) { setForm((old: Json) => ({ ...old, [name]: value })) }
   const template = templates.find(item => item.id === form.template_id)
@@ -134,7 +165,7 @@ function TaskForm({ open, task, sources, templates, onClose, onSaved }: { open: 
     const defaults = Object.fromEntries(fields.filter((item: Json) => item.type === 'boolean').map((item: Json) => [item.key, false]))
     const conditions = { aliases: String(form.aliases || '').split(/[,，]/).map(v => v.trim()).filter(Boolean), weak_aliases: String(form.weak_aliases || '').split(/[,，]/).map(v => v.trim()).filter(Boolean), alias_mode: form.alias_mode, values: { ...defaults, ...(form.values || {}) }, source_ids: form.source_ids }
     try {
-      const payload = { name: form.name, template_id: form.template_id, template_version: selectedVersion, expires_at: form.expires_at || null, conditions }
+      const payload = { name: form.name, template_id: form.template_id, template_version: selectedVersion, expires_at: expiryCutoff(form.expires_at), conditions }
       if (task) await api(`/tasks/${task.id}`, { method: 'PATCH', body: JSON.stringify({ ...payload, version: task.version }) })
       else await api('/tasks', { method: 'POST', body: JSON.stringify(payload) })
       await onSaved(); onClose()
@@ -148,7 +179,7 @@ function TaskForm({ open, task, sources, templates, onClose, onSaved }: { open: 
     <label className="full">完整名称 / 准确关键词（逗号分隔）<input value={form.aliases || ''} onChange={e => field('aliases', e.target.value)} required placeholder="来酷战7000" /></label>
     <label className="full">常用简称（可选）<input value={form.weak_aliases || ''} onChange={e => field('weak_aliases', e.target.value)} placeholder="战7000" /><small>简称只有与明确求购或供货表达同时出现时才会触发。</small></label>
     <label>关键词组合<select value={form.alias_mode || 'any'} onChange={e => field('alias_mode', e.target.value)}><option value="any">任一命中</option><option value="all">全部命中</option></select></label>
-    <label>有效期<input type="date" value={form.expires_at || ''} onChange={e => field('expires_at', e.target.value)} /></label>
+    <label>有效期<input type="date" value={form.expires_at || ''} onChange={e => field('expires_at', e.target.value)} /><small>包含所选本地日期，到次日零点停止。</small></label>
     {fields.map((definition: Json) => <FieldInput key={definition.key} field={definition} value={form.values?.[definition.key]} onChange={value => field('values', { ...(form.values || {}), [definition.key]: value })} />)}
     <fieldset className="full source-picker"><legend>监听渠道（至少一个）</legend>{enabled.length ? enabled.map(source => <label key={source.id} className="check"><input type="checkbox" checked={(form.source_ids || []).includes(source.id)} onChange={e => field('source_ids', e.target.checked ? [...(form.source_ids || []), source.id] : (form.source_ids || []).filter((id: number) => id !== source.id))} />{source.display_name}<small>{source.source_type === 'contact' ? '联系人' : '群'} · {source.peer_id} · {source.account_name}</small></label>) : <p className="empty-inline">请先在“数据连接 → 消息渠道”中开启至少一个群或联系人。</p>}</fieldset>
     <div className="preview full">完整名称可直接进入判断；常用简称必须同时出现明确求购或供货意图。其他条件未出现时进入待核对。</div>
@@ -163,13 +194,13 @@ function Tasks({ sources, templates, notify, reloadShared }: { sources: Json[], 
   async function edit(task: Json) { setSelected(await api(`/tasks/${task.id}`)); setFormOpen(true) }
   async function status(task: Json, next: string) { try { await api(`/tasks/${task.id}`, { method: 'PATCH', body: JSON.stringify({ version: task.version, status: next }) }); await Promise.all([load(), reloadShared()]); notify('任务状态已更新') } catch (err) { notify((err as Error).message) } }
   async function saved() { await Promise.all([load(), reloadShared()]) }
-  const active = tasks.filter(task => task.status === 'active'); const visible = mode ? tasks.filter(task => task.template_id === mode) : tasks
+  const active = tasks.filter(task => task.status === 'active' && !taskExpired(task.expires_at)); const visible = mode ? tasks.filter(task => task.template_id === mode) : tasks
   const columns = mode ? templates.find(item => item.id === mode)?.fields?.filter((field: Json) => field.show_in_list) || [] : []
   const displayValue = (value: any) => value === true ? '是' : value === false ? '否' : value ?? '—'
   return <><div className="page-toolbar"><div><h2>监控任务</h2><p>查看系统正在关注什么，以及线索是否持续产生。</p></div><button className="primary" onClick={() => { setSelected(null); setFormOpen(true) }} disabled={!templates.length}>＋ 新建手工任务</button></div>
     <div className="metrics"><div><span>运行中</span><strong>{active.length}</strong></div><div><span>新线索</span><strong>{tasks.reduce((n, t) => n + t.new_leads, 0)}</strong></div><div><span>待核对</span><strong>{tasks.reduce((n, t) => n + t.review_leads, 0)}</strong></div><div><span>已启用来源</span><strong>{sources.filter(s => s.enabled).length}</strong></div></div>
     <div className="filterbar"><select value={mode} onChange={e => setMode(e.target.value)}><option value="">全部业务模式</option>{templates.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></div>
-    {!tasks.length ? <div className="empty-state"><strong>还没有监控任务</strong><p>{sources.some(s => s.enabled) ? '创建手工任务，或从“数据连接 → 库存数据”开始监控。' : '先到“数据连接 → 消息渠道”开启需要监听的群或联系人。'}</p></div> : <section className="table-card"><table><thead><tr><th>任务</th><th>业务模式</th>{columns.map((field: Json) => <th key={field.key}>{field.label}</th>)}<th>状态</th><th>线索</th><th>最近处理</th><th>操作</th></tr></thead><tbody>{visible.map(task => <tr key={task.id}><td><strong>{task.name}</strong><small>任务版本 {task.current_revision}</small></td><td>{task.template_name}<small>模式 v{task.template_version}</small></td>{columns.map((field: Json) => <td key={field.key}>{displayValue(task.values?.[field.key])}</td>)}<td><Badge value={task.status} /></td><td>{task.new_leads} 新 / {task.review_leads} 待核对</td><td>{formatTime(task.last_processed_at)}</td><td><div className="row-actions"><button onClick={() => edit(task)}>编辑</button>{task.status === 'active' ? <button onClick={() => status(task, 'paused')}>暂停</button> : task.status !== 'archived' && <button onClick={() => status(task, 'active')}>启用</button>}{task.status !== 'completed' && task.status !== 'archived' && <button onClick={() => status(task, 'completed')}>完成</button>}{task.status === 'completed' && <button onClick={() => status(task, 'archived')}>归档</button>}</div></td></tr>)}</tbody></table></section>}
+    {!tasks.length ? <div className="empty-state"><strong>还没有监控任务</strong><p>{sources.some(s => s.enabled) ? '创建手工任务，或从“数据连接 → 库存数据”开始监控。' : '先到“数据连接 → 消息渠道”开启需要监听的群或联系人。'}</p></div> : <section className="table-card"><table><thead><tr><th>任务</th><th>业务模式</th>{columns.map((field: Json) => <th key={field.key}>{field.label}</th>)}<th>状态</th><th>线索</th><th>最近处理</th><th>操作</th></tr></thead><tbody>{visible.map(task => <tr key={task.id}><td><strong>{task.name}</strong><small>任务版本 {task.current_revision}</small></td><td>{task.template_name}<small>模式 v{task.template_version}</small></td>{columns.map((field: Json) => <td key={field.key}>{displayValue(task.values?.[field.key])}</td>)}<td><Badge value={task.status === 'active' && taskExpired(task.expires_at) ? 'expired' : task.status} /></td><td>{task.new_leads} 新 / {task.review_leads} 待核对</td><td>{formatTime(task.last_processed_at)}</td><td><div className="row-actions"><button onClick={() => edit(task)}>编辑</button>{task.status === 'active' ? <button onClick={() => status(task, 'paused')}>暂停</button> : task.status !== 'archived' && <button onClick={() => status(task, 'active')}>启用</button>}{task.status !== 'completed' && task.status !== 'archived' && <button onClick={() => status(task, 'completed')}>完成</button>}{task.status === 'completed' && <button onClick={() => status(task, 'archived')}>归档</button>}</div></td></tr>)}</tbody></table></section>}
     <TaskForm open={formOpen} task={selected} sources={sources} templates={templates} onClose={() => setFormOpen(false)} onSaved={saved} />
   </>
 }
@@ -289,18 +320,33 @@ function Sources({ accounts, sources, reload, notify }: { accounts: Json[], sour
 }
 
 function Leads({ tasks, notify }: { tasks: Json[], notify: (v: string) => void }) {
-  const [items, setItems] = useState<Json[]>([]); const [nextCursor, setNextCursor] = useState<string | null>(null); const [filters, setFilters] = useState({ task: '', outcome: '', status: '', q: '', conflicts: false }); const [detail, setDetail] = useState<Json | null>(null); const [note, setNote] = useState('')
+  const [items, setItems] = useState<Json[]>([]); const [nextCursor, setNextCursor] = useState<string | null>(null); const [filters, setFilters] = useState<LeadFilters>({ task: '', outcome: '', status: '', q: '', conflicts: false }); const [detail, setDetail] = useState<Json | null>(null); const [note, setNote] = useState(''); const [error, setError] = useState(''); const [refreshing, setRefreshing] = useState(false); const request = useRef(0)
   const load = useCallback(async (cursor = '') => {
+    const current = ++request.current
     const params = new URLSearchParams(); if (filters.task) params.set('task_id', filters.task); if (filters.outcome) params.set('outcome', filters.outcome); if (filters.status) params.set('manual_status', filters.status); if (filters.q) params.set('q', filters.q); if (filters.conflicts) params.set('include_conflicts', 'true')
-    if (cursor) params.set('cursor', cursor); const result = await api(`/leads?${params}`)
-    setItems(old => cursor ? [...old, ...result.items] : result.items); setNextCursor(result.next_cursor)
+    try {
+      if (cursor) params.set('cursor', cursor); const result = await api<LeadPage>(`/leads?${params}`)
+      if (current !== request.current) return
+      setItems(old => cursor ? [...old, ...result.items] : result.items); setNextCursor(result.next_cursor); setError('')
+    } catch (err) {
+      if (current === request.current) setError((err as Error).message)
+      throw err
+    }
   }, [filters])
   useEffect(() => { const timer = setTimeout(() => load().catch(err => notify(err.message)), 150); return () => clearTimeout(timer) }, [load, notify])
-  async function open(item: Json) { const value = await api(`/leads/${item.id}`); setDetail(value); setNote(value.note || '') }
+  useEffect(() => {
+    const visible = () => { if (document.visibilityState === 'visible') load().catch(err => notify(err.message)) }
+    document.addEventListener('visibilitychange', visible)
+    return () => document.removeEventListener('visibilitychange', visible)
+  }, [load, notify])
+  async function refresh(message = '线索已刷新') { setRefreshing(true); try { await load(); notify(message) } catch (err) { notify((err as Error).message) } finally { setRefreshing(false) } }
+  async function open(item: Json) { try { const value = await api<Json>(`/leads/${item.id}`); setDetail(value); setNote(value.note || '') } catch (err) { notify((err as Error).message) } }
   async function save(status = detail?.manual_status) { if (!detail) return; try { const value = await api(`/leads/${detail.id}`, { method: 'PATCH', body: JSON.stringify({ version: detail.version, manual_status: status, note, seen: true }) }); setDetail(value); await load(); notify('线索记录已保存') } catch (err) { notify((err as Error).message) } }
-  return <><div className="page-toolbar"><div><h2>线索</h2><p>冲突结果默认收起；不明确方向始终进入待核对。</p></div><button onClick={async () => { await api('/leads/mark-read', { method: 'POST' }); load(); notify('新线索已标为已读') }}>全部标为已读</button></div>
+  async function markRead() { try { await api('/leads/mark-read', { method: 'POST' }); await load(); notify('新线索已标为已读') } catch (err) { notify((err as Error).message) } }
+  return <><div className="page-toolbar"><div><h2>线索</h2><p>冲突结果默认收起；不明确方向始终进入待核对。</p></div><div className="toolbar-actions"><button onClick={() => refresh()} disabled={refreshing}>{refreshing ? '刷新中…' : '刷新线索'}</button><button onClick={markRead}>全部标为已读</button></div></div>
     <div className="filterbar"><select value={filters.task} onChange={e => setFilters({ ...filters, task: e.target.value })}><option value="">全部任务</option>{tasks.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select><select value={filters.outcome} onChange={e => setFilters({ ...filters, outcome: e.target.value })}><option value="">全部判断</option><option value="match">匹配</option><option value="review">待核对</option><option value="conflict">冲突</option></select><select value={filters.status} onChange={e => setFilters({ ...filters, status: e.target.value })}><option value="">全部处理状态</option><option value="new">新线索</option><option value="contacted">已联系</option><option value="ignored">已忽略</option><option value="completed">已完成</option></select><input type="search" placeholder="搜索原文、发布者、QQ号或任务" value={filters.q} onChange={e => setFilters({ ...filters, q: e.target.value })} /><label className="inline-check"><input type="checkbox" checked={filters.conflicts} onChange={e => setFilters({ ...filters, conflicts: e.target.checked })} />显示冲突</label></div>
-    <section className="table-card"><table><thead><tr><th>任务 / 证据</th><th>发布者</th><th>方向</th><th>判断</th><th>处理状态</th><th>时间</th></tr></thead><tbody>{items.map(item => <tr key={item.id} onClick={() => open(item)} tabIndex={0} onKeyDown={e => e.key === 'Enter' && open(item)}><td><strong>{item.task_name}</strong><small className="ellipsis">{item.evidence.text}</small></td><td>{item.sender_name || '未知发布者'}<small>{item.sender_id ? `QQ ${item.sender_id}` : 'QQ 未知'}{` · ${item.source_name || '来源未知'}`}</small></td><td><Badge value={item.direction} /></td><td><Badge value={item.outcome} /></td><td><Badge value={item.manual_status} /></td><td>{item.message_time ? formatTime(item.message_time) : '消息时间未知'}</td></tr>)}</tbody></table>{!items.length && <div className="empty-state">没有符合筛选条件的线索</div>}{nextCursor && <div className="load-more"><button onClick={() => load(nextCursor)}>加载更多</button></div>}</section>
+    {error && <div className="alert error" role="alert">刷新失败：{error}。已保留当前线索。</div>}
+    <section className="table-card"><table><thead><tr><th>任务 / 证据</th><th>发布者</th><th>方向</th><th>判断</th><th>处理状态</th><th>时间</th></tr></thead><tbody>{items.map(item => <tr key={item.id} onClick={() => open(item)} tabIndex={0} onKeyDown={e => e.key === 'Enter' && open(item)}><td><strong>{item.task_name}</strong><small className="ellipsis">{item.evidence.text}</small></td><td>{item.sender_name || '未知发布者'}<small>{item.sender_id ? `QQ ${item.sender_id}` : 'QQ 未知'}{` · ${item.source_name || '来源未知'}`}</small></td><td><Badge value={item.direction} /></td><td><Badge value={item.outcome} /></td><td><Badge value={item.manual_status} /></td><td>{item.message_time ? formatTime(item.message_time) : '消息时间未知'}</td></tr>)}</tbody></table>{!items.length && <div className="empty-state">没有符合筛选条件的线索</div>}{nextCursor && <div className="load-more"><button onClick={() => load(nextCursor).catch(err => notify(err.message))}>加载更多</button></div>}</section>
     <Dialog open={!!detail} title={detail?.task_name || '线索详情'} onClose={() => setDetail(null)} wide>{detail && <div className="lead-detail"><div className="detail-meta"><Badge value={detail.direction} /><Badge value={detail.outcome} /><span>任务版本 {detail.revision}</span>{detail.extracted?.trigger && <span>{detail.extracted.trigger.kind === 'weak' ? '简称' : '完整名称'}：{detail.extracted.trigger.alias}</span>}<span>{detail.sender_name || '未知发布者'} · {detail.sender_id ? `QQ ${detail.sender_id}` : 'QQ 未知'}</span><span>{detail.source_name || '来源未知'} · {detail.source_type === 'contact' ? '联系人' : detail.source_type === 'group' ? '群' : '来源类型未知'} {detail.peer_id || ''}</span><span>{detail.account_id ? `账号 ${detail.account_id}` : '账号未知'} · {detail.native_message_id ? `消息 ${detail.native_message_id}` : '消息标识未知'}</span><span>{detail.message_time ? formatTime(detail.message_time) : '消息时间未知'}</span><span>接收：{detail.received_at ? formatTime(detail.received_at) : '未知'}</span></div><section><h3>原文证据</h3><blockquote>{detail.evidence?.text || detail.raw_text || '证据已到期'}</blockquote></section><section><h3>条件比较</h3><div className="comparisons">{detail.comparisons.map((c: Json) => <div key={c.field}><span>{c.field}</span><strong>{c.actual || '未说明'}</strong><Badge value={c.state === 'match' ? 'match' : c.state === 'conflict' ? 'conflict' : 'review'} /></div>)}</div></section><label>人工备注<textarea rows={4} value={note} onChange={e => setNote(e.target.value)} placeholder="记录联系结果或人工更正" /></label><footer className="dialog-actions"><button onClick={() => save('ignored')}>标为已忽略</button><button onClick={() => save('contacted')}>标为已联系</button><button className="primary" onClick={() => save('completed')}>保存并完成</button></footer></div>}</Dialog>
   </>
 }
@@ -368,6 +414,11 @@ export default function App() {
   const loadShared = useCallback(async () => {
     const [a, s, t, m, h, o] = await Promise.all([api('/accounts'), api('/sources'), allPages('/tasks?include_archived=true'), api('/templates'), api('/status'), api('/onboarding')])
     setAccounts(a.items); setSources(s.items); setTasks(t); setTemplates(m.items); setStatus(h); setOnboarding(o); if (!o.seen) setWizard(true)
+  }, [])
+  useEffect(() => {
+    const expired = () => { csrf = ''; setAuth({ initialized: true, authenticated: false }) }
+    window.addEventListener(SESSION_EXPIRED, expired)
+    return () => window.removeEventListener(SESSION_EXPIRED, expired)
   }, [])
   useEffect(() => { api('/auth/status').then(value => { csrf = value.csrf_token || ''; setAuth(value) }).catch(err => setAuth({ initialized: true, authenticated: false, error: err.message })) }, [])
   useEffect(() => { if (!auth?.authenticated) return; loadShared().catch(err => notify(err.message)); const timer = setInterval(() => api('/status').then(setStatus).catch(() => {}), 10000); return () => clearInterval(timer) }, [auth?.authenticated, loadShared, notify])

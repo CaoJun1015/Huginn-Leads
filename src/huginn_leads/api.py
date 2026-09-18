@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone
 import hashlib
 import json
 import secrets
@@ -24,6 +24,31 @@ from .security import Security
 from .service import Workbench, snapshot_lead_source
 
 COOKIE = "huginn_session"
+
+
+def normalize_task_expiry(value: Any) -> str | None:
+    if value in (None, ""):
+        return None
+    text = str(value).strip()
+    try:
+        if len(text) == 10:
+            selected = date.fromisoformat(text)
+            parsed = datetime.combine(selected + timedelta(days=1), time.min).astimezone()
+        else:
+            parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+            if parsed.tzinfo is None:
+                raise ValueError
+    except ValueError as exc:
+        raise ValueError("有效期必须是日期或包含时区的时间") from exc
+    return parsed.astimezone(timezone.utc).isoformat(timespec="seconds")
+
+
+def task_fields(fields: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [
+        {**field, "match": False, "help": "仅记录，不参与匹配。"}
+        if field.get("role") == "region" else field
+        for field in fields
+    ]
 
 
 class SetupBody(BaseModel):
@@ -220,7 +245,7 @@ def install_api(
         )
         if not revision:
             raise _error(409, "template_version_conflict", "业务模式版本已变化，请刷新后重试")
-        return template, _json(revision["fields_json"], [])
+        return template, task_fields(_json(revision["fields_json"], []))
 
     def external_http_error(exc: ExternalSourceError) -> HTTPException:
         status = 404 if exc.code == "external_source_not_found" else 409 if exc.code in {
@@ -433,7 +458,7 @@ def install_api(
             + where + " ORDER BY t.built_in DESC, t.name"
         )
         for row in rows:
-            row["fields"] = _json(row.pop("fields_json"), [])
+            row["fields"] = task_fields(_json(row.pop("fields_json"), []))
         return {"items": rows}
 
     @router.post("/templates", status_code=201)
@@ -682,6 +707,7 @@ def install_api(
             raise _error(409, "template_version_conflict", "请使用业务模式的最新版本新建任务")
         try:
             conditions = validate_conditions(body.conditions, fields if "values" in body.conditions else None)
+            expires_at = normalize_task_expiry(body.expires_at)
         except ValueError as exc:
             raise _error(400, "invalid_task", str(exc)) from exc
         task_id, now = str(uuid.uuid4()), utcnow()
@@ -690,7 +716,7 @@ def install_api(
             check_enabled_sources(connection, conditions["source_ids"])
             connection.execute(
                 "INSERT INTO tasks(id, name, template_id, status, current_revision, expires_at, created_at, updated_at) VALUES (?, ?, ?, 'active', 1, ?, ?, ?)",
-                (task_id, body.name.strip(), body.template_id, body.expires_at, now, now),
+                (task_id, body.name.strip(), body.template_id, expires_at, now, now),
             )
             connection.execute(
                 "INSERT INTO task_revisions(task_id, revision, template_version, conditions_json, created_at) VALUES (?, 1, ?, ?, ?)",
@@ -746,7 +772,7 @@ def install_api(
                 raise RuntimeError("version")
             name = str(body.get("name", task["name"])).strip()
             status = body.get("status", task["status"])
-            expires_at = body.get("expires_at", task["expires_at"])
+            expires_at = normalize_task_expiry(body["expires_at"]) if "expires_at" in body else task["expires_at"]
             if not name or status not in {"active", "paused", "completed", "archived"}:
                 raise ValueError("任务名称或状态无效")
             revision = task["current_revision"]
@@ -765,7 +791,7 @@ def install_api(
                 ).fetchone()
                 if not template_row:
                     raise RuntimeError("template_version")
-                fields = _json(template_row["fields_json"], [])
+                fields = task_fields(_json(template_row["fields_json"], []))
                 conditions = validate_conditions(body["conditions"], fields if "values" in body["conditions"] else None)
                 check_enabled_sources(connection, conditions["source_ids"])
                 revision += 1

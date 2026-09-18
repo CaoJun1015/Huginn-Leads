@@ -15,7 +15,7 @@ Huginn Leads 通过 NapCatQQ 和 OneBot v11 接收消息，在本机完成来源
 - 查看 QQ 连接、处理积压和失败作业，管理保留期限与 SQLite 备份。
 - 所有业务数据默认保存在本机，不下载聊天附件。
 
-内置的“电脑经销商模式”可识别供求方向、配置、价格、数量和交付地区。自定义字段当前采用明确、可解释的文字包含规则，不使用 LLM 猜测缺失信息。
+内置的“电脑经销商模式”可识别供求方向、配置、价格和数量；交付地区仅记录和展示，不参与自动匹配。自定义字段当前采用明确、可解释的文字包含规则，不使用 LLM 猜测缺失信息。
 
 ## 工作方式
 
@@ -33,6 +33,8 @@ Huginn Leads
 NapCatQQ 是独立的第三方 QQ 协议端，未包含在本仓库中。请从 [NapCatQQ 官方 Releases](https://github.com/NapNeko/NapCatQQ/releases) 下载，并遵守其许可和使用要求。
 
 ## 快速开始
+
+普通用户请从 GitHub Releases 下载 Windows ZIP，解压后双击 `start.cmd`，详细步骤见 [普通用户使用说明](docs/普通用户使用说明.md)。以下内容用于从源码安装。
 
 ### 环境要求
 
@@ -68,9 +70,12 @@ Token: 与 .env 中的 ONEBOT_ACCESS_TOKEN 相同
 
 - 数据库：`data\huginn-leads.db`
 - 备份：`backups\huginn-leads-*.db`
-- 恢复：停止工作台后运行 `restore.cmd backups\备份文件名.db`
+- 发布包恢复：停止工作台后，在解压目录运行 `restore.cmd "backups\备份文件名.db"` 或 `HuginnLeads.exe restore "备份文件.db"`
+- 源码恢复：停止工作台后运行 `.\.venv\Scripts\python.exe scripts\restore.py "备份文件.db"`
 
 只有明确启用的群和好友联系人消息会写入数据库。陌生人、临时会话及未启用来源的正文不会保存；Token 不会返回给浏览器。数据库和普通备份默认未加密，请使用受控的 Windows 账户和磁盘保护。
+
+恢复会校验数据库并先创建恢复前副本；运行中的工作台会拒绝恢复。完整步骤见 [Windows 测试包使用与恢复](docs/Windows测试包使用与恢复.md)。
 
 ## 当前限制
 
@@ -94,6 +99,14 @@ npm run typecheck
 npm run build
 ```
 
+生成无需 Python 和 Node.js 的 Windows 测试包：
+
+```powershell
+.\build-release.ps1 -Version 0.1.0-test
+```
+
+ZIP 输出到 `release` 目录；构建过程会先安装开发依赖、运行后端测试并构建前端，任一步失败都不会继续出包。
+
 NoneBot2、API、后台处理和 WebUI 运行在同一个 Python 进程中。前端生产文件由 Vite 构建到 `src/huginn_leads/static`。
 
 ## 外部数据源
@@ -102,6 +115,6 @@ NoneBot2、API、后台处理和 WebUI 运行在同一个 Python 进程中。前
 
 ## 项目状态
 
-首版已通过后端自动测试、模拟规则样本、前端类型检查和生产构建。真实 QQ 多账号验证及长时间运行仍需继续测试，详见 [验收结果](docs/验收结果.md)。
+截至 2026-09-18，可靠性与界面修复已通过后端自动测试、111 条模拟规则样本、前端类型检查、生产构建及本地临时数据库浏览器验收。真实 QQ 多账号、干净 Windows 和长时间运行仍需现场测试，详见 [验收结果](docs/验收结果.md)。
 
-本仓库尚未声明项目自身的开源许可证。在公开发布前，请根据预期的使用和贡献方式添加 `LICENSE`；第三方组件仍分别遵循其原始许可。
+Huginn Leads 项目代码采用 [MIT License](LICENSE)。NapCatQQ 不包含在本项目中，其许可和使用限制单独适用；第三方组件详情见 [THIRD_PARTY.md](THIRD_PARTY.md)。
