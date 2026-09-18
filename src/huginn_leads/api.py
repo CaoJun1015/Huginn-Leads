@@ -232,7 +232,8 @@ def install_api(
         status = await service.status()
         database_ok = await database.integrity_check()
         now = utcnow()
-        internal_ok = status["worker_running"] and status["maintenance_running"]
+        maintenance_ok = all(item.get("state") == "ok" and not item.get("status_storage_error") for item in status["maintenance"].values())
+        internal_ok = status["worker_running"] and status["maintenance_running"] and maintenance_ok
         try:
             external = await asyncio.wait_for(probe_connections(), timeout=5) if probe_connections else {
                 "napcatqq": {"state": "warning", "message": "当前环境未启用连接探测"},
@@ -246,7 +247,7 @@ def install_api(
         status["components"] = {
             "huginn_leads": {
                 "state": "ok" if database_ok and internal_ok else "warning",
-                "message": "API、数据库和后台任务正常" if database_ok and internal_ok else "API 可用，但后台任务尚未全部运行",
+                "message": "API、数据库和后台任务正常" if database_ok and internal_ok else "API 可用，请检查后台任务与清理/备份结果",
                 "checked_at": now,
             },
             "nonebot2": {"state": "ok", "message": "NoneBot2 驱动正在响应", "checked_at": now},
@@ -1163,7 +1164,10 @@ def install_api(
 
     @router.post("/backups", status_code=201)
     async def create_backup(_session=Depends(require_session)):
-        path = await service.backup()
+        try:
+            path = await service.backup()
+        except Exception as exc:
+            raise _error(503, "backup_failed", "备份失败，请查看系统状态中的实际结果") from exc
         return {"name": path.name, "size": path.stat().st_size}
 
     @router.post("/jobs/{job_id}/retry")

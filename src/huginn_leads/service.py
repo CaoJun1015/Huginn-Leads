@@ -45,6 +45,7 @@ class Workbench:
         self.database = database
         self.settings = settings
         self.stop_event = asyncio.Event()
+        self.maintenance: dict[str, dict[str, Any]] = {}
         self.worker_task: asyncio.Task[None] | None = None
         self.maintenance_task: asyncio.Task[None] | None = None
 
@@ -58,15 +59,61 @@ class Workbench:
         for key, value in defaults.items():
             if await self.database.get_setting(key) is None:
                 await self.database.set_setting(key, value)
+        await self._mark_offline("restart_time_unknown")
+        self.stop_event.clear()
+        for operation in ("cleanup", "backup"):
+            saved = await self.database.get_setting("maintenance_" + operation)
+            self.maintenance[operation] = json.loads(saved) if saved else {"state": "unknown"}
         self.worker_task = asyncio.create_task(self._worker_loop(), name="huginn-leads-worker")
         self.maintenance_task = asyncio.create_task(self._maintenance_loop(), name="huginn-leads-maintenance")
 
     async def stop(self) -> None:
         self.stop_event.set()
-        for task in (self.worker_task, self.maintenance_task):
-            if task:
-                task.cancel()
+        # Let in-flight SQLite/thread operations finish before releasing the process lock.
         await asyncio.gather(*(task for task in (self.worker_task, self.maintenance_task) if task), return_exceptions=True)
+        await self._mark_offline("application_stopped")
+
+    async def _mark_offline(self, reason: str) -> None:
+        now = utcnow()
+        def write(connection: sqlite3.Connection) -> None:
+            for row in connection.execute("SELECT account_id FROM accounts WHERE connected=1").fetchall():
+                if not connection.execute("SELECT 1 FROM connection_gaps WHERE account_id=? AND ended_at IS NULL", (row["account_id"],)).fetchone():
+                    connection.execute(
+                        "INSERT INTO connection_gaps(id,account_id,started_at,reason) VALUES (?,?,?,?)",
+                        (_uuid(), row["account_id"], now, reason),
+                    )
+            connection.execute("UPDATE accounts SET connected=0, updated_at=?, version=version+1 WHERE connected=1", (now,))
+        await self.database.write(write)
+
+    async def _wait(self, seconds: float) -> None:
+        try:
+            await asyncio.wait_for(self.stop_event.wait(), timeout=seconds)
+        except asyncio.TimeoutError:
+            pass
+
+    async def _record_maintenance(self, operation: str, error: Exception | None = None) -> None:
+        now = utcnow()
+        result = self.maintenance.setdefault(operation, {})
+        result.update(state="error" if error else "ok", last_attempt_at=now)
+        if error:
+            result.update(last_failure_at=now, last_failure_code=getattr(error, "sqlite_errorname", type(error).__name__))
+        else:
+            result["last_success_at"] = now
+        try:
+            result.pop("status_storage_error", None)
+            await self.database.set_setting("maintenance_" + operation, json.dumps(result))
+        except Exception:
+            # Still observable during a DB write outage, without unbounded diagnostic rows.
+            result["status_storage_error"] = True
+
+    async def _maintain(self, operation: str, action):
+        try:
+            result = await action()
+        except Exception as exc:
+            await self._record_maintenance(operation, exc)
+            raise
+        await self._record_maintenance(operation)
+        return result
 
     async def record_diagnostic(
         self,
@@ -121,10 +168,16 @@ class Workbench:
 
     async def touch_account(self, account_id: str) -> None:
         now = utcnow()
-        await self.database.execute(
-            "UPDATE accounts SET last_seen_at=?, updated_at=?, version=version+1 WHERE account_id=?",
-            (now, now, account_id),
-        )
+        def write(connection: sqlite3.Connection) -> None:
+            connection.execute(
+                "UPDATE accounts SET last_seen_at=?, updated_at=?, version=version+1 WHERE account_id=?",
+                (now, now, account_id),
+            )
+            connection.execute(
+                "INSERT INTO settings(key,value,updated_at) VALUES ('last_received_at',?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at",
+                (now, now),
+            )
+        await self.database.write(write)
 
     async def refresh_sources(
         self, account_id: str, items: list[dict[str, Any]], source_type: str = "group"
@@ -270,6 +323,10 @@ class Workbench:
             connection.execute(
                 "UPDATE accounts SET last_seen_at=?, updated_at=?, version=version+1 WHERE account_id=?",
                 (now, now, account_id),
+            )
+            connection.execute(
+                "INSERT INTO settings(key,value,updated_at) VALUES ('last_saved_at',?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at",
+                (now, now),
             )
             return {"saved": True, "duplicate": False, "message_id": message_id, "jobs": len(tasks)}
 
@@ -471,13 +528,16 @@ class Workbench:
                     except Exception as exc:
                         await self._fail_job(job, exc)
                 else:
-                    await asyncio.sleep(0.5)
+                    await self._wait(0.5)
             except asyncio.CancelledError:
                 break
             except Exception:
-                await asyncio.sleep(1)
+                await self._wait(1)
 
     async def cleanup(self) -> dict[str, int]:
+        return await self._maintain("cleanup", self._cleanup)
+
+    async def _cleanup(self) -> dict[str, int]:
         now = utcnow()
         diagnostic_days = int(await self.database.get_setting("diagnostic_days") or self.settings.diagnostic_days)
         diagnostic_before = (datetime.now(timezone.utc) - timedelta(days=diagnostic_days)).isoformat(timespec="seconds")
@@ -523,16 +583,22 @@ class Workbench:
         await self.database.write(write)
 
     async def backup(self) -> Path:
-        target = self.settings.backup_dir / f"huginn-leads-{datetime.now().strftime('%Y%m%d-%H%M%S')}.db"
+        return await self._maintain("backup", self._backup)
+
+    async def _backup(self) -> Path:
+        target = self.settings.backup_dir / f"huginn-leads-{datetime.now().strftime('%Y%m%d-%H%M%S-%f')}.db"
 
         def run() -> None:
-            source = sqlite3.connect(self.settings.database_path)
-            destination = sqlite3.connect(target)
+            from contextlib import closing
             try:
-                source.backup(destination)
-            finally:
-                destination.close()
-                source.close()
+                with closing(sqlite3.connect(self.settings.database_path)) as source, closing(sqlite3.connect(target)) as destination:
+                    source.backup(destination)
+                    destination.execute("PRAGMA journal_mode=DELETE")
+                    if destination.execute("PRAGMA integrity_check").fetchone()[0] != "ok":
+                        raise RuntimeError("backup_integrity_failed")
+            except Exception:
+                target.unlink(missing_ok=True)
+                raise
 
         await asyncio.to_thread(run)
         await self.database.execute(
@@ -550,18 +616,26 @@ class Workbench:
 
     async def _maintenance_loop(self) -> None:
         while not self.stop_event.is_set():
-            try:
-                await self.cleanup()
-                last_backup = await self.database.get_setting("last_daily_backup")
-                today = datetime.now().date().isoformat()
-                if last_backup != today:
-                    await self.backup()
-                    await self.database.set_setting("last_daily_backup", today)
-                await asyncio.sleep(3600)
-            except asyncio.CancelledError:
-                break
-            except Exception:
-                await asyncio.sleep(60)
+            failed = False
+            for operation in ("cleanup", "backup"):
+                if self.stop_event.is_set():
+                    break
+                try:
+                    if operation == "cleanup":
+                        await self.cleanup()
+                    else:
+                        today = datetime.now().date().isoformat()
+                        if await self.database.get_setting("last_daily_backup") != today or self.maintenance.get("backup", {}).get("state") == "error":
+                            await self.backup()
+                            await self.database.set_setting("last_daily_backup", today)
+                except asyncio.CancelledError:
+                    return
+                except Exception as exc:
+                    # Also report scheduling/setting failures outside the operation itself.
+                    if self.maintenance.get(operation, {}).get("state") != "error":
+                        await self._record_maintenance(operation, exc)
+                    failed = True
+            await self._wait(60 if failed else 3600)
 
     async def status(self) -> dict[str, Any]:
         counts = await self.database.fetch_one(
@@ -572,14 +646,22 @@ class Workbench:
         account = await self.database.fetch_one(
             "SELECT SUM(connected) AS connected, MAX(last_seen_at) AS last_seen_at FROM accounts"
         ) or {"connected": 0, "last_seen_at": None}
-        last_saved = await self.database.fetch_one("SELECT MAX(received_at) AS value FROM raw_messages")
+        last_saved = await self.database.get_setting("last_saved_at")
+        if last_saved is None:
+            legacy = await self.database.fetch_one("SELECT MAX(last_saved_at) AS value FROM sources")
+            last_saved = legacy["value"] if legacy else None
+        maintenance = {}
+        for operation in ("cleanup", "backup"):
+            saved = await self.database.get_setting("maintenance_" + operation)
+            maintenance[operation] = self.maintenance.get(operation) or (json.loads(saved) if saved else {"state": "unknown"})
         raw_count = await self.database.fetch_one("SELECT COUNT(*) AS value FROM raw_messages")
         lead_count = await self.database.fetch_one("SELECT COUNT(*) AS value FROM leads WHERE superseded_at IS NULL")
         usage = shutil.disk_usage(self.settings.data_dir)
         return {
             "accounts_connected": account["connected"] or 0,
-            "last_received_at": account["last_seen_at"],
-            "last_saved_at": last_saved["value"] if last_saved else None,
+            "last_received_at": await self.database.get_setting("last_received_at"),
+            "last_saved_at": last_saved,
+            "maintenance": maintenance,
             "backlog": counts["backlog"] or 0,
             "failed": counts["failed"] or 0,
             "raw_messages": raw_count["value"] if raw_count else 0,

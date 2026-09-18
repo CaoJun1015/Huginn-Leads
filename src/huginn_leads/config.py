@@ -1,8 +1,26 @@
 from dataclasses import dataclass
 from pathlib import Path
 import os
+import secrets
 
 from dotenv import dotenv_values
+
+
+TOKEN_PLACEHOLDER = "replace-with-a-long-random-token"
+
+
+def ensure_env(root: Path) -> Path:
+    env_path = root / ".env"
+    if env_path.exists():
+        return env_path
+    example_path = root / ".env.example"
+    if not example_path.exists():
+        raise RuntimeError(f"Missing configuration template: {example_path}")
+    content = example_path.read_text(encoding="utf-8")
+    if TOKEN_PLACEHOLDER not in content:
+        raise RuntimeError(".env.example does not contain the expected token placeholder")
+    env_path.write_text(content.replace(TOKEN_PLACEHOLDER, secrets.token_urlsafe(32)), encoding="utf-8")
+    return env_path
 
 
 @dataclass(frozen=True)
@@ -25,7 +43,7 @@ class Settings:
 
 
 def load_settings() -> Settings:
-    root = Path(__file__).resolve().parents[2]
+    root = Path(os.environ.get("HUGINN_ROOT", Path(__file__).resolve().parents[2])).resolve()
     host = os.getenv("HOST", "127.0.0.1")
     port = int(os.getenv("PORT", "18080"))
     data_dir = root / "data"
@@ -38,7 +56,7 @@ def load_settings() -> Settings:
         data_dir=data_dir,
         backup_dir=backup_dir,
         database_path=data_dir / "huginn-leads.db",
-        static_dir=root / "src" / "huginn_leads" / "static",
+        static_dir=Path(__file__).resolve().with_name("static"),
         origin=f"http://{host}:{port}",
         onebot_token_configured=bool(os.getenv("ONEBOT_ACCESS_TOKEN") or env_file.get("ONEBOT_ACCESS_TOKEN")),
     )

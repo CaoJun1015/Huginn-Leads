@@ -341,6 +341,7 @@ class RestoreTests(unittest.TestCase):
             database.parent.mkdir()
             backups.mkdir()
             for path, value in ((database, "before"), (snapshot, "after")):
+                asyncio.run(Database(path, Path(__file__).resolve().parents[1] / "src/huginn_leads/migrations").migrate())
                 connection = sqlite3.connect(path)
                 try:
                     connection.execute("CREATE TABLE marker(value TEXT NOT NULL)")

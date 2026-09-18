@@ -1,7 +1,8 @@
 @echo off
 cd /d "%~dp0"
-if "%~1"=="" (
-  echo Usage: restore.cmd backups\huginn-leads-YYYYMMDD-HHMMSS.db
-  exit /b 2
+if exist "%~dp0HuginnLeads.exe" (
+  "%~dp0HuginnLeads.exe" restore %*
+) else (
+  "%~dp0.venv\Scripts\python.exe" "%~dp0scripts\restore.py" %*
 )
-"%~dp0.venv\Scripts\python.exe" "%~dp0scripts\restore.py" "%~1"
+exit /b %errorlevel%

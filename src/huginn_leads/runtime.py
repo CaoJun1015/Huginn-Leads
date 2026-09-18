@@ -19,6 +19,7 @@ from .config import load_settings
 from .database import Database
 from .security import Security
 from .service import Workbench
+from .instance import InstanceLock
 
 _installed = False
 
@@ -63,6 +64,7 @@ def install() -> None:
 
     settings = load_settings()
     database = Database(settings.database_path, Path(__file__).with_name("migrations"))
+    instance_lock = InstanceLock(settings.database_path)
     security = Security(database)
     service = Workbench(database, settings)
     driver = get_driver()
@@ -132,13 +134,21 @@ def install() -> None:
 
     @driver.on_startup
     async def startup() -> None:
-        await database.migrate()
-        await security.start()
-        await service.start()
+        instance_lock.acquire()
+        try:
+            await database.migrate()
+            await security.start()
+            await service.start()
+        except BaseException:
+            instance_lock.release()
+            raise
 
     @driver.on_shutdown
     async def shutdown() -> None:
-        await service.stop()
+        try:
+            await service.stop()
+        finally:
+            instance_lock.release()
 
     @driver.on_bot_connect
     async def connected(bot: Bot) -> None:
