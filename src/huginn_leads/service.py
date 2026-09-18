@@ -181,11 +181,10 @@ class Workbench:
         if not native_id:
             await self.record_diagnostic("missing_message_id", account_id)
             return {"saved": False, "reason": "missing_message_id"}
-        source = await self.database.fetch_one(
-            """SELECT s.id FROM sources s JOIN accounts a ON a.account_id=s.account_id
-               WHERE s.account_id=? AND s.source_type=? AND s.peer_id=? AND s.enabled=1 AND a.connected=1""",
-            (account_id, source_type, peer_id),
-        )
+        source_query = """SELECT s.id FROM sources s JOIN accounts a ON a.account_id=s.account_id
+            WHERE s.account_id=? AND s.source_type=? AND s.peer_id=? AND s.enabled=1 AND a.connected=1"""
+        source_params = (account_id, source_type, peer_id)
+        source = await self.database.fetch_one(source_query, source_params)
         if not source:
             return {"saved": False, "reason": "source_not_enabled"}
 
@@ -194,6 +193,11 @@ class Workbench:
         message_id = _uuid()
 
         def write(connection: sqlite3.Connection) -> dict[str, Any]:
+            # BEGIN IMMEDIATE serializes this final check and all inserts with
+            # source disable/account disconnect, including other connections.
+            source = connection.execute(source_query, source_params).fetchone()
+            if not source:
+                return {"saved": False, "reason": "source_not_enabled"}
             storage_key = peer_id if source_type == "group" else f"contact:{peer_id}"
             existing = connection.execute(
                 """SELECT id FROM raw_messages

@@ -1,3 +1,5 @@
+import asyncio
+import threading
 from datetime import datetime, timedelta, timezone
 import json
 from pathlib import Path
@@ -74,6 +76,103 @@ class ServiceTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(result["saved"])
         self.assertEqual((await self.db.fetch_one("SELECT COUNT(*) AS n FROM raw_messages"))["n"], 0)
         self.assertEqual((await self.db.fetch_one("SELECT COUNT(*) AS n FROM diagnostics"))["n"], 0)
+
+    async def test_source_disable_or_disconnect_committed_after_precheck_rejects_all_payload(self):
+        await self.create_task()
+        other = Database(self.db.path, self.db.migration_dir)
+        original_write = self.db.write
+        for change in ("UPDATE sources SET enabled=0", "UPDATE accounts SET connected=0"):
+            with self.subTest(change=change):
+                await other.execute("UPDATE sources SET enabled=1")
+                await other.execute("UPDATE accounts SET connected=1")
+
+                async def close_before_transaction(callback):
+                    # An independent connection commits after the fast precheck.
+                    await other.execute(change)
+                    return await original_write(callback)
+
+                with patch.object(self.db, "write", close_before_transaction):
+                    result = await self.service.ingest(self.message(text="unique-body-and-segments"))
+                self.assertEqual(result, {"saved": False, "reason": "source_not_enabled"})
+                for table in ("raw_messages", "processing_jobs"):
+                    self.assertEqual((await self.db.fetch_one(f"SELECT COUNT(*) n FROM {table}"))["n"], 0)
+                self.assertIsNone((await self.db.fetch_one("SELECT last_saved_at FROM sources"))["last_saved_at"])
+
+    async def test_ingest_transaction_commits_before_disable_and_job_still_processes(self):
+        await self.create_task()
+        entered, release, attempted = threading.Event(), threading.Event(), threading.Event()
+        original_write = self.db.write
+        other = Database(self.db.path, self.db.migration_dir)
+        original_connect = other._connect
+
+        def connect():
+            connection = original_connect()
+            connection.set_trace_callback(lambda sql: attempted.set() if sql.startswith("UPDATE sources") else None)
+            return connection
+
+        async def hold_before_commit(callback):
+            def held(connection):
+                result = callback(connection)
+                entered.set()
+                if not release.wait(5):
+                    raise TimeoutError("test did not release ingest")
+                return result
+            return await original_write(held)
+
+        pending = []
+        try:
+            with patch.object(self.db, "write", hold_before_commit), patch.object(other, "_connect", connect):
+                ingestion = asyncio.create_task(self.service.ingest(self.message()))
+                pending.append(ingestion)
+                self.assertTrue(await asyncio.to_thread(entered.wait, 3))
+                closure = asyncio.create_task(other.execute("UPDATE sources SET enabled=0"))
+                pending.append(closure)
+                self.assertTrue(await asyncio.to_thread(attempted.wait, 3))
+                self.assertFalse(closure.done())
+                release.set()
+                result, _ = await asyncio.gather(ingestion, closure)
+        finally:
+            release.set()
+            await asyncio.gather(*pending, return_exceptions=True)
+        self.assertTrue(result["saved"])
+        self.assertEqual(result["jobs"], 1)
+        self.assertFalse((await self.service.ingest(self.message("after-close")))["saved"])
+        job = await self.service._claim_job()
+        await self.service._process_job(job)
+        self.assertEqual((await self.db.fetch_one("SELECT COUNT(*) n FROM leads"))["n"], 1)
+        self.assertEqual((await self.db.fetch_one("SELECT COUNT(*) n FROM raw_messages"))["n"], 1)
+
+    async def test_account_and_source_type_isolation_with_same_message_id(self):
+        await self.create_task()
+        await self.service.connect_account("10002", "second-synthetic-account")
+        await self.service.refresh_sources("10002", [{"group_id": 20001}])
+        await self.service.refresh_sources("10001", [{"user_id": 20001}], "contact")
+        other_account = self.message() | {"account_id": "10002"}
+        contact = self.message() | {"source_type": "contact", "peer_id": "20001"}
+        for message in (other_account, contact):
+            self.assertFalse((await self.service.ingest(message))["saved"])
+        first = await self.service.ingest(self.message())
+        self.assertEqual(first["jobs"], 1)
+        await self.db.execute("UPDATE sources SET enabled=1")
+        for message in (other_account, contact):
+            result = await self.service.ingest(message)
+            self.assertTrue(result["saved"])
+            self.assertFalse(result["duplicate"])
+            self.assertEqual(result["jobs"], 0)
+            self.assertTrue((await self.service.ingest(message))["duplicate"])
+        self.assertEqual((await self.db.fetch_one("SELECT COUNT(*) n FROM raw_messages"))["n"], 3)
+        self.assertEqual((await self.db.fetch_one("SELECT COUNT(*) n FROM processing_jobs"))["n"], 1)
+
+    async def test_job_insert_failure_rolls_back_raw_and_segments(self):
+        await self.create_task()
+        await self.db.execute("CREATE TRIGGER fail_job BEFORE INSERT ON processing_jobs BEGIN SELECT RAISE(ABORT, 'synthetic-private-marker'); END")
+        result = await self.service.ingest(self.message(text="synthetic-private-marker"))
+        self.assertEqual(result, {"saved": False, "reason": "database_write_failed"})
+        for table in ("raw_messages", "processing_jobs"):
+            self.assertEqual((await self.db.fetch_one(f"SELECT COUNT(*) n FROM {table}"))["n"], 0)
+        diagnostic = await self.db.fetch_one("SELECT * FROM diagnostics")
+        self.assertEqual(diagnostic["code"], "database_write_failed")
+        self.assertNotIn("synthetic-private-marker", str(diagnostic))
 
     async def test_enabled_contact_is_processed_like_group(self):
         await self.service.refresh_sources(

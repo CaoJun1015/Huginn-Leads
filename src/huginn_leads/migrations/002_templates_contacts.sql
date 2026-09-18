@@ -1,5 +1,3 @@
-BEGIN IMMEDIATE;
-
 ALTER TABLE sources ADD COLUMN source_type TEXT NOT NULL DEFAULT 'group'
   CHECK (source_type IN ('group', 'contact'));
 ALTER TABLE sources ADD COLUMN peer_id TEXT;
@@ -54,5 +52,3 @@ VALUES (
   '[{"key":"direction","label":"任务方向","type":"select","required":true,"show_in_list":true,"match":true,"options":[{"value":"purchase","label":"我要采购"},{"value":"sell","label":"我有库存待售"}],"role":"direction"},{"key":"product","label":"商品描述","type":"text","required":true,"show_in_list":true,"match":false,"role":"product"},{"key":"cpu","label":"CPU","type":"text","required":false,"show_in_list":false,"match":true,"role":"cpu"},{"key":"gpu","label":"GPU","type":"text","required":false,"show_in_list":false,"match":true,"role":"gpu"},{"key":"memory_gb","label":"内存下限 GB","type":"number","required":false,"show_in_list":true,"match":true,"role":"memory_gb"},{"key":"storage_tb","label":"硬盘下限 TB","type":"number","required":false,"show_in_list":false,"match":true,"role":"storage_tb"},{"key":"price","label":"预算/价格","type":"number","required":false,"show_in_list":true,"match":true,"role":"price"},{"key":"quantity","label":"数量下限","type":"number","required":false,"show_in_list":true,"match":true,"role":"quantity"},{"key":"quantity_unit","label":"数量单位","type":"select","required":false,"show_in_list":false,"match":false,"options":[{"value":"台","label":"台"},{"value":"个","label":"个"},{"value":"套","label":"套"},{"value":"件","label":"件"}],"role":"quantity_unit"},{"key":"region","label":"交付地区","type":"text","required":false,"show_in_list":true,"match":true,"help":"采购时代表目标收货地，销售时代表可交付地。","role":"region"}]',
   strftime('%Y-%m-%dT%H:%M:%SZ', 'now')
 );
-
-COMMIT;

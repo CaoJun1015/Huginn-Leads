@@ -10,6 +10,7 @@ import nonebot
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from nonebot import get_bots, get_driver, on_message
+from nonebot.log import logger
 from nonebot.adapters import Bot, Event
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageEvent, PrivateMessageEvent
 
@@ -43,11 +44,22 @@ def _event_size(event: MessageEvent) -> int:
         return len(str(event.original_message).encode("utf-8"))
 
 
+def _redact_framework_log(record: dict[str, Any]) -> None:
+    # NoneBot logs events before receive(), including ignored sources. Adapter
+    # parse errors and handler tracebacks can also contain the entire payload.
+    if (record["name"] or "").startswith(("nonebot.message", "nonebot.internal.matcher", "nonebot.adapters.onebot", "nonebot.utils")):
+        exception = record["exception"]
+        kind = exception.type.__name__ if exception else "none"
+        record["message"] = f"framework_event code={record['function']} kind={kind}"
+        record["exception"] = None
+
+
 def install() -> None:
     global _installed
     if _installed:
         return
     _installed = True
+    logger.configure(patcher=_redact_framework_log)
 
     settings = load_settings()
     database = Database(settings.database_path, Path(__file__).with_name("migrations"))
@@ -137,7 +149,7 @@ def install() -> None:
         except Exception:
             pass
         await service.connect_account(str(bot.self_id), name)
-        print(f"[Huginn Leads] QQ {bot.self_id} 已连接" + (f"（{name}）" if name else ""), flush=True)
+        print(f"[Huginn Leads] QQ {bot.self_id} 已连接", flush=True)
 
     @driver.on_bot_disconnect
     async def disconnected(bot: Bot) -> None:
@@ -174,9 +186,11 @@ def install() -> None:
         }
         result = await service.ingest(payload)
         if result.get("saved") and not result.get("duplicate"):
-            preview = json.dumps(payload["text"][:200], ensure_ascii=False)
-            kind = "联系人" if source_type == "contact" else "群"
-            print(f"[Huginn Leads] 已保存 {kind} {peer_id} / {sender_name}: {preview}", flush=True)
+            print(
+                f"[Huginn Leads] message_saved account={account_id} type={source_type} "
+                f"peer={peer_id} message={payload['native_message_id']} jobs={result['jobs']}",
+                flush=True,
+            )
 
     static_dir = settings.static_dir
     assets = static_dir / "assets"

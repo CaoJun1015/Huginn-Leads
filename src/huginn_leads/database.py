@@ -10,6 +10,32 @@ from typing import Any, TypeVar
 T = TypeVar("T")
 
 
+class MigrationError(RuntimeError):
+    """A migration failed without exposing SQL or business values."""
+
+
+def _migration_sql(connection: sqlite3.Connection, script: str) -> None:
+    # executescript() commits an existing transaction. Let SQLite identify complete
+    # statements instead; transaction control belongs exclusively to the runner.
+    def authorize(action, _arg1, _arg2, _database, _trigger):
+        if action in (sqlite3.SQLITE_TRANSACTION, sqlite3.SQLITE_SAVEPOINT):
+            return sqlite3.SQLITE_DENY
+        return sqlite3.SQLITE_OK
+
+    connection.set_authorizer(authorize)
+    try:
+        statement = ""
+        for char in script:
+            statement += char
+            if char == ";" and sqlite3.complete_statement(statement):
+                connection.execute(statement)
+                statement = ""
+        if statement.strip():
+            connection.execute(statement)
+    finally:
+        connection.set_authorizer(None)
+
+
 def utcnow() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
@@ -37,19 +63,28 @@ class Database:
                 connection.execute(
                     "CREATE TABLE IF NOT EXISTS schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)"
                 )
-                applied = {
-                    row[0] for row in connection.execute("SELECT version FROM schema_migrations")
-                }
                 for path in sorted(self.migration_dir.glob("*.sql")):
                     version = int(path.stem.split("_", 1)[0])
-                    if version in applied:
-                        continue
-                    connection.executescript(path.read_text(encoding="utf-8"))
-                    connection.execute(
-                        "INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)",
-                        (version, utcnow()),
-                    )
-                connection.commit()
+                    try:
+                        connection.execute("BEGIN IMMEDIATE")
+                        if not connection.execute(
+                            "SELECT 1 FROM schema_migrations WHERE version=?", (version,)
+                        ).fetchone():
+                            _migration_sql(connection, path.read_text(encoding="utf-8"))
+                            connection.execute(
+                                "INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)",
+                                (version, utcnow()),
+                            )
+                        connection.commit()
+                    except Exception as exc:
+                        connection.rollback()
+                        code = getattr(exc, "sqlite_errorname", type(exc).__name__)
+                        raise MigrationError(
+                            f"schema_migration_failed version={version} code={code}. "
+                            "本次迁移已回滚；修复故障后可重试。若旧库结构与版本登记不一致，"
+                            "请停止应用、先备份并核对结构与数据；不要跳过错误或直接补版本号。"
+                            "恢复步骤：docs/数据库迁移恢复.md"
+                        ) from None
             finally:
                 connection.close()
 

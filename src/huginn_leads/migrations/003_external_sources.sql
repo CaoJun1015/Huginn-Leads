@@ -1,5 +1,3 @@
-BEGIN IMMEDIATE;
-
 INSERT OR IGNORE INTO templates(
   id,name,built_in,status,current_version,created_at,updated_at
 ) VALUES (
@@ -59,5 +57,3 @@ CREATE TABLE external_records (
 CREATE INDEX idx_external_records_source
   ON external_records(external_source_id, active, updated_at DESC);
 CREATE INDEX idx_external_records_task ON external_records(task_id);
-
-COMMIT;
