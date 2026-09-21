@@ -249,7 +249,7 @@ def install_api(
 
     def external_http_error(exc: ExternalSourceError) -> HTTPException:
         status = 404 if exc.code == "external_source_not_found" else 409 if exc.code in {
-            "external_source_archived", "template_version_conflict",
+            "external_source_archived", "external_source_changed", "template_version_conflict",
         } else 400
         return _error(status, exc.code, str(exc), exc.details)
 
@@ -678,7 +678,8 @@ def install_api(
                tr.template_version, tr.conditions_json,
                (SELECT COUNT(*) FROM leads l WHERE l.task_id=t.id AND l.seen_at IS NULL AND l.superseded_at IS NULL) AS new_leads,
                (SELECT COUNT(*) FROM leads l WHERE l.task_id=t.id AND l.outcome='review' AND l.superseded_at IS NULL) AS review_leads,
-               (SELECT MAX(processed_at) FROM evaluations e WHERE e.task_id=t.id) AS last_processed_at
+               (SELECT MAX(processed_at) FROM evaluations e WHERE e.task_id=t.id) AS last_processed_at,
+               COALESCE((SELECT 1 FROM external_records er WHERE er.task_id=t.id AND er.active=0 LIMIT 1),0) AS external_record_inactive
                FROM tasks t JOIN templates tm ON tm.id=t.template_id
                JOIN task_revisions tr ON tr.task_id=t.id AND tr.revision=t.current_revision"""
                + where + " ORDER BY t.updated_at DESC, t.id DESC LIMIT ?",

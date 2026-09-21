@@ -236,6 +236,18 @@ class ExternalCatalog:
         rows = await asyncio.to_thread(_read_rows, source["database_path"], config["query_text"])
         return source, fields, _prepare_rows(source, fields, rows)
 
+    @staticmethod
+    def _ensure_current_source(connection: sqlite3.Connection, source: dict[str, Any]) -> None:
+        row = connection.execute("SELECT * FROM external_sources WHERE id=?", (source["id"],)).fetchone()
+        current = source_view(dict(row)) if row else {}
+        keys = (
+            "status", "database_path", "query_text", "key_column", "template_id", "template_version",
+            "field_mapping", "defaults", "name_fields", "alias_fields", "weak_alias_fields",
+            "alias_mode", "task_source_ids",
+        )
+        if not row or any(current.get(key) != source.get(key) for key in keys):
+            raise ExternalSourceError("external_source_changed", "外部数据源配置已变化，请重新检查后同步")
+
     async def preview(self, source_id: str) -> dict[str, Any]:
         source, _, prepared = await self._read(source_id)
         current = {
@@ -275,6 +287,7 @@ class ExternalCatalog:
             )
 
         def write(connection: sqlite3.Connection) -> dict[str, Any]:
+            self._ensure_current_source(connection, source)
             before = {
                 row["external_key"]: dict(row)
                 for row in connection.execute(
@@ -309,11 +322,18 @@ class ExternalCatalog:
                         json.dumps(item["values"], ensure_ascii=False), item["content_hash"], now, now, now,
                     ),
                 )
-                if old and old["task_id"] and old["content_hash"] != item["content_hash"] and source["task_source_ids"]:
+                if old and old["task_id"]:
                     task = connection.execute(
-                        "SELECT current_revision FROM tasks WHERE id=?", (old["task_id"],)
+                        """SELECT t.current_revision,tr.template_version,tr.conditions_json
+                           FROM tasks t JOIN task_revisions tr
+                             ON tr.task_id=t.id AND tr.revision=t.current_revision
+                           WHERE t.id=?""",
+                        (old["task_id"],),
                     ).fetchone()
-                    if task:
+                    if task and (
+                        int(task["template_version"]) != int(source["template_version"])
+                        or _json(task["conditions_json"], {}) != item["conditions"]
+                    ):
                         revision = int(task["current_revision"]) + 1
                         connection.execute(
                             "INSERT INTO task_revisions(task_id,revision,template_version,conditions_json,created_at) VALUES (?,?,?,?,?)",
@@ -363,33 +383,31 @@ class ExternalCatalog:
         source_ids = source["task_source_ids"]
         if not source_ids:
             raise ExternalSourceError("task_sources_required", "发布任务前至少选择一个已启用的 QQ 来源")
-        records = await self.database.fetch_all(
-            "SELECT * FROM external_records WHERE external_source_id=? AND active=1 AND task_id IS NULL ORDER BY display_name",
-            (source_id,),
-        )
-        prepared: list[tuple[dict[str, Any], dict[str, Any]]] = []
-        for record in records:
-            conditions = validate_conditions(
-                {
-                    "aliases": _json(record["aliases_json"], []),
-                    "weak_aliases": _json(record["weak_aliases_json"], []),
-                    "alias_mode": source["alias_mode"],
-                    "source_ids": source_ids,
-                    "values": _json(record["values_json"], {}),
-                },
-                fields,
-            )
-            prepared.append((record, conditions))
         now = utcnow()
 
         def write(connection: sqlite3.Connection) -> int:
+            self._ensure_current_source(connection, source)
             placeholders = ",".join("?" for _ in source_ids)
             enabled = connection.execute(
                 f"SELECT COUNT(*) FROM sources WHERE enabled=1 AND id IN ({placeholders})", source_ids
             ).fetchone()[0]
             if enabled != len(source_ids):
                 raise ExternalSourceError("invalid_task_sources", "任务来源已停用，请更新外部数据源配置")
-            for record, conditions in prepared:
+            records = connection.execute(
+                "SELECT * FROM external_records WHERE external_source_id=? AND active=1 AND task_id IS NULL ORDER BY display_name",
+                (source_id,),
+            ).fetchall()
+            for record in records:
+                conditions = validate_conditions(
+                    {
+                        "aliases": _json(record["aliases_json"], []),
+                        "weak_aliases": _json(record["weak_aliases_json"], []),
+                        "alias_mode": source["alias_mode"],
+                        "source_ids": source_ids,
+                        "values": _json(record["values_json"], {}),
+                    },
+                    fields,
+                )
                 task_id = str(uuid.uuid4())
                 connection.execute(
                     "INSERT INTO tasks(id,name,template_id,status,current_revision,created_at,updated_at) VALUES (?,?,?,'active',1,?,?)",
@@ -411,10 +429,10 @@ class ExternalCatalog:
                     "INSERT INTO audit(occurred_at,object_type,object_id,action) VALUES (?,'task',?,'publish_external')",
                     (now, task_id),
                 )
-            return len(prepared)
+            return len(records)
 
         published = await self.database.write(write)
-        return {"published": published, "skipped": max(0, len(records) - published)}
+        return {"published": published, "skipped": 0}
 
     async def records(self, source_id: str) -> list[dict[str, Any]]:
         await self._load(source_id)

@@ -93,7 +93,7 @@ small { color: var(--muted); }
 .badge.active, .badge.match, .badge.supply, .badge.contacted, .badge.completed { color: #087a52; background: #e9fbf4; }
 .badge.review, .badge.pending, .badge.unknown { color: #9a5109; background: #fff5e5; }
 .badge.expired { color: var(--red); background: #fff2f1; }
-.badge.conflict, .badge.failed, .badge.ignored { color: #b42318; background: #fff0ef; }
+.badge.conflict, .badge.failed, .badge.ignored, .badge.inventory_inactive { color: #b42318; background: #fff0ef; }
 .badge.paused, .badge.archived, .badge.not_match { color: #475467; background: #f2f4f7; }
 .empty-state { padding: 50px 24px; border: 1px dashed #c8d2df; border-radius: 12px; color: var(--muted); background: rgba(255, 255, 255, .55); text-align: center; }
 .empty-state strong { display: block; margin-bottom: 6px; color: #344054; }

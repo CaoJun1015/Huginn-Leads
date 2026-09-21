@@ -19,7 +19,19 @@ def main():
     server = thread = None
     sock = socket.socket()
     try:
-        _, task = fixture.seed()
+        source, task = fixture.seed()
+        now = '2026-09-19T00:00:00+00:00'
+        fixture.sql("""INSERT INTO external_sources(
+          id,name,database_path,query_text,key_column,template_id,template_version,
+          field_mapping_json,defaults_json,name_fields_json,alias_fields_json,weak_alias_fields_json,
+          alias_mode,task_source_ids_json,created_at,updated_at)
+          VALUES ('browser-external','synthetic inventory','unused.db','SELECT 1','id','supply-demand',1,
+          '{}','{}','[]','[]','[]','any',?,?,?)""", (f'[{source}]', now, now))
+        fixture.sql("""INSERT INTO external_records(
+          id,external_source_id,external_key,template_id,template_version,display_name,aliases_json,
+          weak_aliases_json,values_json,content_hash,active,task_id,first_imported_at,last_seen_at,updated_at)
+          VALUES ('browser-record','browser-external','sku-1','supply-demand',1,'synthetic inventory',
+          '["ThinkBook"]','[]','{}','hash',0,?,?,?,?)""", (task, now, now, now))
         for index in range(49):
             filler = fixture.ingest(f'filler-{index}', text=f'synthetic-filler-{index}')
             fixture.manual(task, filler)
@@ -67,6 +79,9 @@ const {chromium} = require('playwright');
     await page.getByRole('button', {name:'登录', exact:true}).click();
 
     await page.locator('aside nav button').filter({hasText:'监控任务'}).click();
+    const taskRow = page.locator('tbody tr').filter({hasText:'synthetic-task'});
+    await taskRow.getByText('关联库存已失效', {exact:true}).waitFor();
+    await taskRow.getByRole('button', {name:'暂停', exact:true}).waitFor();
     await page.getByRole('button', {name:'新建手工任务'}).click();
     const taskDialog = page.locator('dialog[open]');
     await taskDialog.getByText('包含所选本地日期，到次日零点停止。', {exact:true}).waitFor();
@@ -127,7 +142,7 @@ const {chromium} = require('playwright');
     await page.getByRole('button', {name:'刷新线索'}).click();
     await page.getByLabel('密码', {exact:true}).waitFor();
     assert.deepEqual(errors, []);
-    console.log('PASS: pagination, filter race, manual/visibility refresh, note preservation, failure retention, auth expiry');
+    console.log('PASS: inventory warning/pause entry, pagination, filter race, refresh, note preservation, failure retention, auth expiry');
   } finally { await browser.close(); }
 })().catch(error => {console.error(error);process.exitCode=1;});
 '''

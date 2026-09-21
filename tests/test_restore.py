@@ -94,7 +94,7 @@ class RestoreSafetyTests(unittest.TestCase):
                 restore_database(old, self.database, self.backups)
                 self.assertEqual(validate_backup(self.database), version)
                 asyncio.run(self.db.migrate())
-                self.assertEqual(validate_backup(self.database), 6)
+                self.assertEqual(validate_backup(self.database), 7)
                 self.assertEqual(self.marker(self.database), f'v{version}')
 
     def test_os_lock_rejects_running_restore_and_is_released_after_process_kill(self):

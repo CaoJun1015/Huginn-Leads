@@ -55,7 +55,7 @@ class MigrationTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(await db.integrity_check())
 
     async def test_each_version_rolls_back_schema_data_and_registration_then_retries(self):
-        for version in range(1, 7):
+        for version in range(1, 8):
             with self.subTest(version=version), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory)
                 path = root / "test.db"
@@ -76,7 +76,7 @@ class MigrationTests(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(self.dump(path), before)
                 await db.execute("DROP TRIGGER fail_registration")
                 await db.migrate()
-                self.assertEqual([row["version"] for row in await db.fetch_all("SELECT version FROM schema_migrations ORDER BY version")], [1, 2, 3, 4, 5, 6])
+                self.assertEqual([row["version"] for row in await db.fetch_all("SELECT version FROM schema_migrations ORDER BY version")], [1, 2, 3, 4, 5, 6, 7])
                 before_restart = self.dump(path)
                 await db.migrate()
                 self.assertEqual(self.dump(path), before_restart)
@@ -127,7 +127,7 @@ class MigrationTests(unittest.IsolatedAsyncioTestCase):
             path = Path(directory) / "test.db"
             first, second = Database(path, MIGRATIONS), Database(path, MIGRATIONS)
             await asyncio.gather(first.migrate(), second.migrate())
-            self.assertEqual([r["version"] for r in await first.fetch_all("SELECT version FROM schema_migrations ORDER BY version")], [1, 2, 3, 4, 5, 6])
+            self.assertEqual([r["version"] for r in await first.fetch_all("SELECT version FROM schema_migrations ORDER BY version")], [1, 2, 3, 4, 5, 6, 7])
             self.assertTrue(await first.integrity_check())
 
     async def test_script_cannot_commit_runner_transaction(self):

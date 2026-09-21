@@ -1,0 +1,170 @@
+{
+  "generated_at": "2026-09-21T02:51:19+00:00",
+  "environment": {
+    "os": "Windows-10-10.0.22631-SP0",
+    "machine": "AMD64",
+    "processor": "Intel64 Family 6 Model 165 Stepping 2, GenuineIntel",
+    "logical_cpus": 16,
+    "python": "3.11.9",
+    "sqlite": "3.45.1"
+  },
+  "method": {
+    "database": "temporary SQLite WAL database",
+    "data": "synthetic only",
+    "api_repeats": 20,
+    "page_size": 50,
+    "task_scales": [
+      100,
+      1000
+    ],
+    "history_scales": [
+      10000,
+      100000
+    ]
+  },
+  "fanout": [
+    {
+      "tasks": 100,
+      "messages": 10,
+      "jobs": 1000,
+      "backlog_peak": 1000,
+      "ingest": {
+        "p50_ms": 16.95,
+        "p95_ms": 17.62
+      },
+      "input_messages_per_second": 58.77,
+      "fanout_jobs_per_second": 5877.41,
+      "claim": {
+        "p50_ms": 9.01,
+        "p95_ms": 11.41
+      },
+      "processing": {
+        "p50_ms": 15.46,
+        "p95_ms": 19.16
+      },
+      "jobs_drained": 100,
+      "backlog_remaining": 900,
+      "drain_seconds": 2.93,
+      "drain_jobs_per_second": 34.13
+    },
+    {
+      "tasks": 1000,
+      "messages": 3,
+      "jobs": 3000,
+      "backlog_peak": 3000,
+      "ingest": {
+        "p50_ms": 34.93,
+        "p95_ms": 34.93
+      },
+      "input_messages_per_second": 28.37,
+      "fanout_jobs_per_second": 28373.65,
+      "claim": {
+        "p50_ms": 9.52,
+        "p95_ms": 12.92
+      },
+      "processing": {
+        "p50_ms": 15.13,
+        "p95_ms": 18.78
+      },
+      "jobs_drained": 100,
+      "backlog_remaining": 2900,
+      "drain_seconds": 2.57,
+      "drain_jobs_per_second": 38.96
+    }
+  ],
+  "api": {
+    "100_tasks_empty_history": {
+      "messages": {
+        "p50_ms": 9.12,
+        "p95_ms": 10.18
+      },
+      "leads": {
+        "p50_ms": 9.07,
+        "p95_ms": 9.66
+      },
+      "tasks": {
+        "p50_ms": 12.61,
+        "p95_ms": 13.78
+      },
+      "status": {
+        "p50_ms": 14.78,
+        "p95_ms": 15.64
+      }
+    },
+    "1000_tasks_empty_history": {
+      "messages": {
+        "p50_ms": 8.41,
+        "p95_ms": 9.96
+      },
+      "leads": {
+        "p50_ms": 8.39,
+        "p95_ms": 9.37
+      },
+      "tasks": {
+        "p50_ms": 14.86,
+        "p95_ms": 16.02
+      },
+      "status": {
+        "p50_ms": 16.74,
+        "p95_ms": 18.31
+      }
+    },
+    "10000_history": {
+      "messages": {
+        "p50_ms": 94.99,
+        "p95_ms": 100.83
+      },
+      "leads": {
+        "p50_ms": 49.81,
+        "p95_ms": 55.8
+      },
+      "tasks": {
+        "p50_ms": 27.33,
+        "p95_ms": 28.46
+      },
+      "status": {
+        "p50_ms": 164.3,
+        "p95_ms": 171.29
+      }
+    },
+    "100000_history": {
+      "messages": {
+        "p50_ms": 6271.97,
+        "p95_ms": 6789.6
+      },
+      "leads": {
+        "p50_ms": 141.14,
+        "p95_ms": 147.59
+      },
+      "tasks": {
+        "p50_ms": 113.84,
+        "p95_ms": 118.55
+      },
+      "status": {
+        "p50_ms": 3192.72,
+        "p95_ms": 3301.12
+      }
+    }
+  },
+  "storage": {
+    "10000_history": {
+      "database_bytes": 18186240,
+      "wal_bytes": 0
+    },
+    "100000_history": {
+      "database_bytes": 177844224,
+      "wal_bytes": 0
+    }
+  },
+  "final_counts": {
+    "tasks": 1000,
+    "raw_messages": 100000,
+    "processing_jobs": 100000,
+    "evaluations": 100000,
+    "leads": 100000
+  },
+  "manual_leads": 5000,
+  "slowest_api_p95_ms": 6789.6,
+  "target_ms": 1000,
+  "target_met": false
+}

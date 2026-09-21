@@ -651,43 +651,49 @@ class Workbench:
             await self._wait(60 if failed else 3600)
 
     async def status(self) -> dict[str, Any]:
-        counts = await self.database.fetch_one(
+        snapshot = await self.database.fetch_one(
             """SELECT
-               SUM(status IN ('pending','deferred','processing')) AS backlog,
-               SUM(status='failed') AS failed FROM processing_jobs"""
-        ) or {"backlog": 0, "failed": 0}
-        account = await self.database.fetch_one(
-            "SELECT SUM(connected) AS connected, MAX(last_seen_at) AS last_seen_at FROM accounts"
-        ) or {"connected": 0, "last_seen_at": None}
-        last_saved = await self.database.get_setting("last_saved_at")
-        if last_saved is None:
-            legacy = await self.database.fetch_one("SELECT MAX(last_saved_at) AS value FROM sources")
-            last_saved = legacy["value"] if legacy else None
-        maintenance = {}
-        for operation in ("cleanup", "backup"):
-            saved = await self.database.get_setting("maintenance_" + operation)
-            maintenance[operation] = self.maintenance.get(operation) or (json.loads(saved) if saved else {"state": "unknown"})
-        raw_count = await self.database.fetch_one("SELECT COUNT(*) AS value FROM raw_messages")
-        lead_count = await self.database.fetch_one("SELECT COUNT(*) AS value FROM leads WHERE superseded_at IS NULL")
+              COALESCE((SELECT SUM(status IN ('pending','deferred','processing')) FROM processing_jobs),0) AS backlog,
+              COALESCE((SELECT SUM(status='failed') FROM processing_jobs),0) AS failed,
+              COALESCE((SELECT SUM(connected) FROM accounts),0) AS connected,
+              (SELECT value FROM settings WHERE key='last_received_at') AS last_received_at,
+              COALESCE((SELECT value FROM settings WHERE key='last_saved_at'),
+                       (SELECT MAX(last_saved_at) FROM sources)) AS last_saved_at,
+              (SELECT value FROM settings WHERE key='maintenance_cleanup') AS maintenance_cleanup,
+              (SELECT value FROM settings WHERE key='maintenance_backup') AS maintenance_backup,
+              (SELECT COUNT(*) FROM raw_messages) AS raw_messages,
+              (SELECT COUNT(*) FROM leads WHERE superseded_at IS NULL) AS leads,
+              (SELECT value FROM settings WHERE key='raw_days') AS raw_days,
+              (SELECT value FROM settings WHERE key='lead_days') AS lead_days,
+              (SELECT value FROM settings WHERE key='diagnostic_days') AS diagnostic_days,
+              (SELECT value FROM settings WHERE key='backup_keep') AS backup_keep"""
+        ) or {}
+        maintenance = {
+            operation: self.maintenance.get(operation) or (
+                json.loads(snapshot.get("maintenance_" + operation))
+                if snapshot.get("maintenance_" + operation) else {"state": "unknown"}
+            )
+            for operation in ("cleanup", "backup")
+        }
         usage = shutil.disk_usage(self.settings.data_dir)
         return {
-            "accounts_connected": account["connected"] or 0,
-            "last_received_at": await self.database.get_setting("last_received_at"),
-            "last_saved_at": last_saved,
+            "accounts_connected": snapshot.get("connected") or 0,
+            "last_received_at": snapshot.get("last_received_at"),
+            "last_saved_at": snapshot.get("last_saved_at"),
             "maintenance": maintenance,
-            "backlog": counts["backlog"] or 0,
-            "failed": counts["failed"] or 0,
-            "raw_messages": raw_count["value"] if raw_count else 0,
-            "leads": lead_count["value"] if lead_count else 0,
+            "backlog": snapshot.get("backlog") or 0,
+            "failed": snapshot.get("failed") or 0,
+            "raw_messages": snapshot.get("raw_messages") or 0,
+            "leads": snapshot.get("leads") or 0,
             "disk_free_bytes": usage.free,
             "data_path": str(self.settings.data_dir),
             "backup_path": str(self.settings.backup_dir),
             "worker_running": bool(self.worker_task and not self.worker_task.done()),
             "maintenance_running": bool(self.maintenance_task and not self.maintenance_task.done()),
             "retention": {
-                "raw_days": int(await self.database.get_setting("raw_days") or self.settings.raw_days),
-                "lead_days": int(await self.database.get_setting("lead_days") or self.settings.lead_days),
-                "diagnostic_days": int(await self.database.get_setting("diagnostic_days") or self.settings.diagnostic_days),
-                "backup_keep": int(await self.database.get_setting("backup_keep") or self.settings.backup_keep),
+                "raw_days": int(snapshot.get("raw_days") or self.settings.raw_days),
+                "lead_days": int(snapshot.get("lead_days") or self.settings.lead_days),
+                "diagnostic_days": int(snapshot.get("diagnostic_days") or self.settings.diagnostic_days),
+                "backup_keep": int(snapshot.get("backup_keep") or self.settings.backup_keep),
             },
         }

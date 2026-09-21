@@ -334,6 +334,10 @@ class ApiTests(unittest.TestCase):
         imported = self.client.post(f"/api/external-sources/{source_id}/imports", headers=self.write_headers)
         self.assertEqual(imported.json()["tasks_updated"], 0)
 
+        asyncio.run(self.db.execute("UPDATE external_records SET active=0 WHERE task_id=?", (task["id"],)))
+        listed = next(item for item in self.client.get("/api/tasks").json()["items"] if item["id"] == task["id"])
+        self.assertEqual((listed["external_record_inactive"], listed["status"]), (1, "active"))
+
         unsafe = {**payload, "name": "非法查询", "query_text": "DELETE FROM stock"}
         response = self.client.post("/api/external-sources", headers=self.write_headers, json=unsafe)
         self.assertEqual(response.status_code, 400)
