@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-21T02:51:19+00:00",
+  "generated_at": "2026-09-21T03:14:57+00:00",
   "environment": {
     "os": "Windows-10-10.0.22631-SP0",
     "machine": "AMD64",
@@ -29,23 +29,23 @@
       "jobs": 1000,
       "backlog_peak": 1000,
       "ingest": {
-        "p50_ms": 16.95,
-        "p95_ms": 17.62
+        "p50_ms": 16.38,
+        "p95_ms": 22.37
       },
-      "input_messages_per_second": 58.77,
-      "fanout_jobs_per_second": 5877.41,
+      "input_messages_per_second": 55.34,
+      "fanout_jobs_per_second": 5533.88,
       "claim": {
-        "p50_ms": 9.01,
-        "p95_ms": 11.41
+        "p50_ms": 7.91,
+        "p95_ms": 8.83
       },
       "processing": {
-        "p50_ms": 15.46,
-        "p95_ms": 19.16
+        "p50_ms": 13.41,
+        "p95_ms": 14.8
       },
       "jobs_drained": 100,
       "backlog_remaining": 900,
-      "drain_seconds": 2.93,
-      "drain_jobs_per_second": 34.13
+      "drain_seconds": 2.15,
+      "drain_jobs_per_second": 46.44
     },
     {
       "tasks": 1000,
@@ -53,96 +53,96 @@
       "jobs": 3000,
       "backlog_peak": 3000,
       "ingest": {
-        "p50_ms": 34.93,
-        "p95_ms": 34.93
+        "p50_ms": 35.83,
+        "p95_ms": 35.83
       },
-      "input_messages_per_second": 28.37,
-      "fanout_jobs_per_second": 28373.65,
+      "input_messages_per_second": 9.18,
+      "fanout_jobs_per_second": 9183.24,
       "claim": {
-        "p50_ms": 9.52,
-        "p95_ms": 12.92
+        "p50_ms": 8.85,
+        "p95_ms": 10.17
       },
       "processing": {
-        "p50_ms": 15.13,
-        "p95_ms": 18.78
+        "p50_ms": 13.85,
+        "p95_ms": 16.64
       },
       "jobs_drained": 100,
       "backlog_remaining": 2900,
-      "drain_seconds": 2.57,
-      "drain_jobs_per_second": 38.96
+      "drain_seconds": 2.35,
+      "drain_jobs_per_second": 42.53
     }
   ],
   "api": {
     "100_tasks_empty_history": {
       "messages": {
-        "p50_ms": 9.12,
-        "p95_ms": 10.18
+        "p50_ms": 7.54,
+        "p95_ms": 8.18
       },
       "leads": {
-        "p50_ms": 9.07,
-        "p95_ms": 9.66
+        "p50_ms": 7.49,
+        "p95_ms": 8.19
       },
       "tasks": {
-        "p50_ms": 12.61,
-        "p95_ms": 13.78
+        "p50_ms": 10.37,
+        "p95_ms": 11.26
       },
       "status": {
-        "p50_ms": 14.78,
-        "p95_ms": 15.64
+        "p50_ms": 12.88,
+        "p95_ms": 13.77
       }
     },
     "1000_tasks_empty_history": {
       "messages": {
-        "p50_ms": 8.41,
-        "p95_ms": 9.96
+        "p50_ms": 7.75,
+        "p95_ms": 8.17
       },
       "leads": {
-        "p50_ms": 8.39,
-        "p95_ms": 9.37
+        "p50_ms": 7.37,
+        "p95_ms": 8.07
       },
       "tasks": {
-        "p50_ms": 14.86,
-        "p95_ms": 16.02
+        "p50_ms": 13.11,
+        "p95_ms": 14.47
       },
       "status": {
-        "p50_ms": 16.74,
-        "p95_ms": 18.31
+        "p50_ms": 14.2,
+        "p95_ms": 14.91
       }
     },
     "10000_history": {
       "messages": {
-        "p50_ms": 94.99,
-        "p95_ms": 100.83
+        "p50_ms": 85.97,
+        "p95_ms": 91.74
       },
       "leads": {
-        "p50_ms": 49.81,
-        "p95_ms": 55.8
+        "p50_ms": 45.58,
+        "p95_ms": 49.08
       },
       "tasks": {
-        "p50_ms": 27.33,
-        "p95_ms": 28.46
+        "p50_ms": 25.54,
+        "p95_ms": 27.56
       },
       "status": {
-        "p50_ms": 164.3,
-        "p95_ms": 171.29
+        "p50_ms": 158.46,
+        "p95_ms": 169.13
       }
     },
     "100000_history": {
       "messages": {
-        "p50_ms": 6271.97,
-        "p95_ms": 6789.6
+        "p50_ms": 5935.92,
+        "p95_ms": 6258.91
       },
       "leads": {
-        "p50_ms": 141.14,
-        "p95_ms": 147.59
+        "p50_ms": 136.06,
+        "p95_ms": 146.02
       },
       "tasks": {
-        "p50_ms": 113.84,
-        "p95_ms": 118.55
+        "p50_ms": 108.45,
+        "p95_ms": 130.37
       },
       "status": {
-        "p50_ms": 3192.72,
-        "p95_ms": 3301.12
+        "p50_ms": 3083.33,
+        "p95_ms": 3354.97
       }
     }
   },
@@ -164,7 +164,7 @@
     "leads": 100000
   },
   "manual_leads": 5000,
-  "slowest_api_p95_ms": 6789.6,
+  "slowest_api_p95_ms": 6258.91,
   "target_ms": 1000,
   "target_met": false
 }
