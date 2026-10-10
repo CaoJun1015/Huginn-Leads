@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field, model_validator
 from .config import Settings
 from .database import Database, utcnow
 from .external import ExternalCatalog, ExternalSourceError, external_presets, source_view, validate_source_config
+from .jev import Classification, ClassifyBody, JevError, classify_message
 from .rules import DEFAULT_TEMPLATE_FIELDS, PROCESSOR_VERSION, validate_conditions, validate_template_fields
 from .security import Security
 from .service import Workbench, snapshot_lead_source
@@ -338,6 +339,17 @@ def install_api(
     @router.get("/status")
     async def get_status(_session=Depends(require_session)):
         return await build_status()
+
+    @router.get("/ai/jev/status")
+    async def jev_status(_session=Depends(require_session)):
+        return {"configured": bool(settings.typesafe_api_key), "model": settings.typesafe_model}
+
+    @router.post("/ai/jev/classify", response_model=Classification)
+    async def jev_classify(body: ClassifyBody, _session=Depends(require_session)):
+        try:
+            return await asyncio.to_thread(classify_message, settings, body)
+        except JevError as exc:
+            raise _error(exc.status, exc.code, str(exc)) from exc
 
     async def onboarding_payload() -> dict[str, Any]:
         status = await build_status()

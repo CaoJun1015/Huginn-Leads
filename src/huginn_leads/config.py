@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 import os
 import secrets
@@ -40,6 +40,8 @@ class Settings:
     page_size: int = 50
     max_page_size: int = 200
     onebot_token_configured: bool = False
+    typesafe_api_key: str = field(default="", repr=False)
+    typesafe_model: str = "jev-1.13.0"
 
 
 def load_settings() -> Settings:
@@ -59,4 +61,6 @@ def load_settings() -> Settings:
         static_dir=Path(__file__).resolve().with_name("static"),
         origin=f"http://{host}:{port}",
         onebot_token_configured=bool(os.getenv("ONEBOT_ACCESS_TOKEN") or env_file.get("ONEBOT_ACCESS_TOKEN")),
+        typesafe_api_key=(os.getenv("TYPESAFE_API_KEY", env_file.get("TYPESAFE_API_KEY") or "")).strip(),
+        typesafe_model=(os.getenv("TYPESAFE_MODEL", env_file.get("TYPESAFE_MODEL") or "jev-1.13.0")).strip() or "jev-1.13.0",
     )
