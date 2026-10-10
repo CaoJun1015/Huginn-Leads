@@ -4,6 +4,7 @@ from pathlib import Path
 import sqlite3
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -85,6 +86,42 @@ class ApiTests(unittest.TestCase):
         self.probe_error = True
         failed_probe = self.client.get("/api/status").json()["components"]
         self.assertEqual((failed_probe["napcatqq"]["state"], failed_probe["qq"]["state"]), ("error", "error"))
+
+    def test_jev_auth_validation_and_disabled_state(self):
+        endpoint = "/api/ai/jev/classify"
+        with patch("huginn_leads.api.classify_message") as classify:
+            self.assertEqual(self.client.get("/api/ai/jev/status").status_code, 401)
+            self.assertEqual(self.client.post(endpoint, json={"text": "求购电脑"}).status_code, 401)
+            self.authenticate()
+            status = self.client.get("/api/ai/jev/status").json()
+            self.assertEqual(status, {"configured": False, "model": "jev-1.13.0"})
+            self.assertEqual(self.client.post(endpoint, json={"text": "求购电脑"}).status_code, 403)
+            self.assertEqual(self.client.post(endpoint, headers=self.origin, json={"text": "求购电脑"}).status_code, 403)
+            response = self.client.post(endpoint, headers=self.write_headers, json={"text": " "})
+            self.assertEqual(response.status_code, 422)
+            classify.assert_not_called()
+        response = self.client.post(endpoint, headers=self.write_headers, json={"text": "求购电脑"})
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.json()["code"], "jev_not_configured")
+
+    def test_jev_route_result_and_error_contract(self):
+        from huginn_leads.jev import Classification, JevError, TokenUsage
+        self.authenticate()
+        result = Classification(model="jev-1.13.0", category="purchase",
+                                probabilities={"purchase": 0.95, "other": 0.05},
+                                confidence=0.9, needs_review=False,
+                                usage=TokenUsage(input_tokens=100, output_tokens=0))
+        with patch("huginn_leads.api.classify_message", return_value=result) as classify:
+            response = self.client.post("/api/ai/jev/classify", headers=self.write_headers, json={
+                "text": "求购电脑", "categories": {"purchase": "求购", "other": "其他"},
+            })
+            self.assertEqual(response.status_code, 200, response.text)
+            self.assertEqual(response.json(), result.model_dump())
+            self.assertEqual(classify.call_args.args[1].text, "求购电脑")
+        with patch("huginn_leads.api.classify_message", side_effect=JevError(504, "jev_timeout", "请求超时")):
+            response = self.client.post("/api/ai/jev/classify", headers=self.write_headers, json={"text": "求购电脑"})
+            self.assertEqual(response.status_code, 504)
+            self.assertEqual(response.json()["code"], "jev_timeout")
 
     def test_source_and_task_flow(self):
         self.authenticate()
